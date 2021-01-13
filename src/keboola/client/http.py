@@ -6,32 +6,32 @@ from requests.packages.urllib3.util.retry import Retry
 METHOD_RETRY_WHITELIST = ('GET', 'POST', 'PATCH', 'UPDATE', 'PUT', 'DELETE')
 
 
-class HttpClientBase:
+class HttpClient:
     """
     Base class for implementing a single Http client related to some REST API.
 
     """
 
     def __init__(self, base_url, max_retries=10, backoff_factor=0.3,
-                 status_forcelist=(500, 502, 504), default_http_header=None, auth_header=None, auth=None,
-                 default_params=None,
+                 status_forcelist=(500, 502, 504), default_http_header=None,
+                 auth_header=None, auth=None, default_params=None,
                  method_whitelist=METHOD_RETRY_WHITELIST):
         """
         Create an endpoint.
 
-          Args:
+        Args:
             base_url: The base URL for this endpoint. e.g. https://exampleservice.com/api_v1/
             max_retries: Total number of retries to allow.
             backoff_factor:  A back-off factor to apply between attempts.
             status_forcelist:  A set of HTTP status codes that we should force a retry on. e.g. [500,502]
             default_http_header (dict): Default header to be sent with each request
                                         eg. {
-                                                       'Content-Type' : 'application/json',
-                                                       'Accept' : 'application/json'}
+                                                        'Content-Type' : 'application/json',
+                                                        'Accept' : 'application/json'}
             auth_header (dict): Auth header to be sent with each request
                                         eg. {'Authorization': 'Bearer ' + token}
             auth: Default Authentication tuple or object to attach to (from  requests.Session().auth).
-                  eg. auth = (user, password)
+                    eg. auth = (user, password)
             default_params (dict): default parameters to be sent with each request eg. {'param':'value'}
 
         """
@@ -55,7 +55,7 @@ class HttpClientBase:
             connect=self.max_retries,
             backoff_factor=self.backoff_factor,
             status_forcelist=self.status_forcelist,
-            method_whitelist=self.method_whitelist
+            allowed_methods=self.method_whitelist
         )
         adapter = HTTPAdapter(max_retries=retry)
         session.mount('http://', adapter)

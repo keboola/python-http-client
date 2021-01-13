@@ -2,7 +2,7 @@ import requests
 import unittest
 from unittest.mock import patch
 
-import src.keboola.client as client
+from keboola.client import HttpClient
 
 
 class TestClientBase(unittest.TestCase):
@@ -10,7 +10,7 @@ class TestClientBase(unittest.TestCase):
     @patch.object(requests.Session, 'request')
     def test_post_raw_default_pars_with_none_custom_pars_passes(self, mock_post):
         test_def_par = {"default_par": "test"}
-        cl = client.HttpClientBase('http://example.com', default_params=test_def_par)
+        cl = HttpClient('http://example.com', default_params=test_def_par)
 
         # post raw
         cl.post_raw()
@@ -19,7 +19,7 @@ class TestClientBase(unittest.TestCase):
     @patch.object(requests.Session, 'request')
     def test_post_default_pars_with_none_custom_pars_passes(self, mock_post):
         test_def_par = {"default_par": "test"}
-        cl = client.HttpClientBase('http://example.com', default_params=test_def_par)
+        cl = HttpClient('http://example.com', default_params=test_def_par)
 
         # post
         cl.post()
@@ -28,7 +28,7 @@ class TestClientBase(unittest.TestCase):
     @patch.object(requests.Session, 'request')
     def test_post_raw_default_pars_with_custom_pars_passes(self, mock_post):
         test_def_par = {"default_par": "test"}
-        cl = client.HttpClientBase('http://example.com', default_params=test_def_par)
+        cl = HttpClient('http://example.com', default_params=test_def_par)
 
         # post_raw
         cust_par = {"custom_par": "custom_par_value"}
@@ -40,7 +40,7 @@ class TestClientBase(unittest.TestCase):
     @patch.object(requests.Session, 'request')
     def test_post_default_pars_with_custom_pars_passes(self, mock_post):
         test_def_par = {"default_par": "test"}
-        cl = client.HttpClientBase('http://example.com', default_params=test_def_par)
+        cl = HttpClient('http://example.com', default_params=test_def_par)
 
         # post
         cust_par = {"custom_par": "custom_par_value"}
@@ -52,7 +52,7 @@ class TestClientBase(unittest.TestCase):
     @patch.object(requests.Session, 'request')
     def test_post_raw_default_pars_with_custom_pars_to_None_passes(self, mock_post):
         test_def_par = {"default_par": "test"}
-        cl = client.HttpClientBase('http://example.com', default_params=test_def_par)
+        cl = HttpClient('http://example.com', default_params=test_def_par)
 
         # post_raw
         cust_par = None
@@ -66,7 +66,7 @@ class TestClientBase(unittest.TestCase):
     @patch.object(requests.Session, 'request')
     def test_post_default_pars_with_custom_pars_to_None_passes(self, mock_post):
         test_def_par = {"default_par": "test"}
-        cl = client.HttpClientBase('http://example.com', default_params=test_def_par)
+        cl = HttpClient('http://example.com', default_params=test_def_par)
 
         # post_raw
         cust_par = None
@@ -79,7 +79,7 @@ class TestClientBase(unittest.TestCase):
 
     @patch.object(requests.Session, 'request')
     def test_post_raw_with_custom_pars_passes(self, mock_post):
-        cl = client.HttpClientBase('http://example.com')
+        cl = HttpClient('http://example.com')
 
         # post_raw
         cust_par = {"custom_par": "custom_par_value"}
@@ -89,7 +89,7 @@ class TestClientBase(unittest.TestCase):
 
     @patch.object(requests.Session, 'request')
     def test_post_with_custom_pars_passes(self, mock_post):
-        cl = client.HttpClientBase('http://example.com')
+        cl = HttpClient('http://example.com')
 
         # post_raw
         cust_par = {"custom_par": "custom_par_value"}
@@ -99,7 +99,7 @@ class TestClientBase(unittest.TestCase):
 
     @patch.object(requests.Session, 'request')
     def test_all_methods_requests_raw_with_custom_pars_passes(self, mock_request):
-        cl = client.HttpClientBase('http://example.com')
+        cl = HttpClient('http://example.com')
 
         # post_raw
         cust_par = {"custom_par": "custom_par_value"}
@@ -110,9 +110,9 @@ class TestClientBase(unittest.TestCase):
 
         cl.requests_retry_session().close()
 
-    @patch.object(client.HttpClientBase, '_request_raw')
+    @patch.object(HttpClient, '_request_raw')
     def test_all_methods_skip_auth(self, mock_post):
-        cl = client.HttpClientBase('http://example.com')
+        cl = HttpClient('http://example.com')
 
         for m in ['GET', 'POST', 'PATCH', 'UPDATE', 'PUT', 'DELETE']:
             method_to_call = getattr(cl, m.lower())
@@ -120,12 +120,8 @@ class TestClientBase(unittest.TestCase):
             mock_post.assert_called_with(m, ignore_auth=True, url='http://example.com')
 
     def test_request_skip_auth_header(self):
-        cl = client.HttpClientBase('http://example.com', default_http_header={"defheader": "test"},
-                                   auth_header={"Authorization": "test"})
+        cl = HttpClient('http://example.com', default_http_header={"defheader": "test"},
+                        auth_header={"Authorization": "test"})
         res = cl._request_raw(url=cl.base_url, method='POST', ignore_auth=True)
         cl.requests_retry_session().close()
         self.assertEqual(res.request.headers.get('defheader'), 'test')
-
-
-if __name__ == '__main__':
-    unittest.main()

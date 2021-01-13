@@ -9,12 +9,16 @@ setuptools.setup(
     author="Keboola KDS Team",
     setup_requires=['pytest-runner', 'flake8'],
     tests_require=['pytest'],
+    install_requires=[
+        'requests'
+    ],
     author_email="data_ca@keboola.com",
     description="General library for Python applications running in Keboola Connection environment",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/keboola/python-http-client",
-    packages=setuptools.find_namespace_packages(include=['keboola.*']),
+    packages=['keboola.http-client'],
+    package_dir={'': 'src'},
     include_package_data=True,
     zip_safe=False,
     classifiers=[

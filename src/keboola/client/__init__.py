@@ -1,1 +1,1 @@
-from .client import HttpClientBase  # noqa
+from .http import HttpClient  # noqa
