@@ -20,7 +20,7 @@ It is being developed by the Keboola Data Services team and officially supported
 The package may be installed via PIP:
 
 ```
-pip install keboola.http_client
+pip install keboola.client
 ```
 
 ### Structure and Functionality
