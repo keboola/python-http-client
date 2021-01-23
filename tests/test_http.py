@@ -169,7 +169,7 @@ class TestClientBase(unittest.TestCase):
 
         for met in ['GET', 'POST', 'PATCH', 'UPDATE', 'PUT']:
             cl._request_raw(met, 'http://example2.com/v1/', ignore_auth=False, is_absolute_path=True)
-            mock_request.assert_called_with(met, 'http://example2.com/v1/')
+            mock_request.assert_called_with(met, 'http://example2.com/v1/', params={})
 
         cl.requests_retry_session().close()
 
@@ -180,6 +180,21 @@ class TestClientBase(unittest.TestCase):
 
         for met in ['GET', 'POST', 'PATCH', 'UPDATE', 'PUT']:
             cl._request_raw(met, 'events', ignore_auth=False, is_absolute_path=False)
-            mock_request.assert_called_with(met, 'http://example.com/api/v1/events')
+            mock_request.assert_called_with(met, 'http://example.com/api/v1/events', params={})
+
+        cl.requests_retry_session().close()
+
+    @patch.object(client.requests.Session, 'request')
+    def test_all_methods_kwargs(self, mock_request):
+        url = 'http://example.com/api/v1'
+        cl = client.HttpClient(url)
+
+        for met in ['GET', 'POST', 'PATCH', 'UPDATE', 'PUT']:
+            method_to_call = getattr(cl, met.lower())
+            method_to_call(params={'par1': 'val1'}, verify=False, data={'data': '123'},
+                           files={'a': '/path/to/file'}, cert='/path/to/cert', json=None)
+            mock_request.assert_called_with(met, 'http://example.com/api/v1/', verify=False, data={'data': '123'},
+                                            files={'a': '/path/to/file'}, cookies=None, cert='/path/to/cert',
+                                            params={'par1': 'val1'}, json=None)
 
         cl.requests_retry_session().close()

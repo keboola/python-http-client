@@ -90,8 +90,7 @@ class HttpClient:
             A requests.Response object.
         """
         s = requests.Session()
-
-        print(endpoint_path)
+        print(kwargs.get('headers'))
 
         # URL Specification
         if kwargs.pop('is_absolute_path', False) is False:
@@ -112,12 +111,19 @@ class HttpClient:
         # Default headers
         headers.update(self._default_header)
 
+        print(headers)
+
         # Auth headers
         if kwargs.pop('ignore_auth', False) is False:
             headers.update(self._auth_header)
             s.headers.update(headers)
             s.auth = self._auth
+
+        print(headers)
+        print(s.headers)
         s.headers.update(headers)
+
+        print(s.headers)
 
         # Update parameters
         params = kwargs.pop('params', {})
@@ -202,9 +208,6 @@ class HttpClient:
             requests.HTTPError: If the API request fails.
         """
 
-        if not endpoint_path:
-            endpoint_path = ''
-
         return self.get_raw(*endpoint_path, params=params, headers=headers, cookies=cookies,
                             is_absolute_path=is_absolute_path, ignore_auth=ignore_auth, **kwargs)
 
@@ -233,9 +236,6 @@ class HttpClient:
         Returns:
             A requests.Response object.
         """
-
-        if not endpoint_path:
-            endpoint_path = ''
 
         method = 'POST'
         return self._request_raw(method, *endpoint_path, params=params, headers=headers, data=data, json=json,
@@ -271,9 +271,6 @@ class HttpClient:
         Raises:
             requests.HTTPError: If the API request fails.
         """
-
-        if not endpoint_path:
-            endpoint_path = ''
 
         return self.post_raw(*endpoint_path, params=params, headers=headers, data=data, json=json, cookies=cookies,
                              is_absolute_path=is_absolute_path, files=files, ignore_auth=ignore_auth, **kwargs)
