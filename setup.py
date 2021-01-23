@@ -17,7 +17,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/keboola/python-http-client",
-    packages=['keboola.http_client'],
+    packages=['keboola.client'],
     package_dir={'': 'src'},
     include_package_data=True,
     zip_safe=False,
