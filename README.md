@@ -10,7 +10,7 @@ It is being developed by the Keboola Data Services team and officially supported
 
 - API Documentation: [API Docs](https://github.com/keboola/python-http-client/blob/main)
 - Source code: [https://github.com/keboola/python-http-client](https://github.com/keboola/python-http-client)
-- PYPI project code: [link](link)
+- PYPI project code: [https://test.pypi.org/project/keboola.client/](https://test.pypi.org/project/keboola.client/)
 - Documentation: [https://developers.keboola.com/extend/component/python-component-library](https://developers.keboola.com/extend/component/python-component-library)
 
 ## Quick Start
