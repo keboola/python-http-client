@@ -148,17 +148,21 @@ class TestClientBase(unittest.TestCase):
         self.assertEqual(res.request.headers.get('Authorization'), None)
 
     def test_all_methods_raw(self):
-        sapi_index = 'https://connection.keboola.com/v2/'
-        cl = client.HttpClient(sapi_index, default_http_header={'api_token': 'abdc1234'})
+        url = 'http://example.com'
+        cl = client.HttpClient(url, default_http_header={'header1': 'headerval'},
+                               auth_header={'api_token': 'abdc1234'})
 
-        TARGET_URL = 'https://connection.keboola.com/v2/storage?exclude=componentDetails'
+        TARGET_URL = 'http://example.com/storage?exclude=componentDetails'
 
-        for m in ['GET', 'POST', 'PATCH', 'UPDATE', 'PUT', 'DELETE']:
+        for m in ['GET', 'POST']:
             method_to_call = getattr(cl, m.lower() + '_raw')
-            res = method_to_call('storage', params={'exclude': 'componentDetails'}, headers={'abc': '123'})
+            res = method_to_call('storage', params={'exclude': 'componentDetails'},
+                                 headers={'abc': '123'}, data={'attr1': 'val1'})
             self.assertEqual(res.request.url, TARGET_URL)
             self.assertEqual(res.request.headers.get('api_token'), 'abdc1234')
             self.assertEqual(res.request.headers.get('abc'), '123')
+            self.assertEqual(res.request.headers.get('header1'), 'headerval')
+            self.assertEqual(res.request.body, 'attr1=val1')
 
         cl.requests_retry_session().close()
 
@@ -198,3 +202,12 @@ class TestClientBase(unittest.TestCase):
                                             params={'par1': 'val1'}, json=None)
 
         cl.requests_retry_session().close()
+
+    def test_update_auth_header_None(self):
+        existing_header = None
+        new_header = {'api_token': 'token_value'}
+
+        cl = client.HttpClient('https://example.com', auth_header=existing_header)
+        cl.update_auth_header(new_header, override=False)
+
+        self.assertDictEqual(cl._auth_header, new_header)

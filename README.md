@@ -103,7 +103,7 @@ cl = HttpClient(BASE_URL)
 
 data = {'attr_1': 'value_1', 'attr_2': 'value_2'}
 header = {'content-type': 'application/json'}
-response = cl.post_raw(self.base_url, data=data, headers=header)
+response = cl.post_raw(data=data, headers=header)
 
 if response.ok is not True:
     raise ValueError(response.json())
@@ -121,14 +121,45 @@ cl = HttpClient(BASE_URL)
 
 data = {'attr_1': 'value_1', 'attr_2': 'value_2'}
 header = {'content-type': 'application/json'}
-response = cl.post(self.base_url, data=data, headers=header)
+response = cl.post(data=data, headers=header)
+```
+
+#### Working with URL paths
+
+Each of the methods takes an optional positional argument `endpoint_path`. If specified, the value of the `endpoint_path` will be appended to the URL specified in the `base_url` parameter, when initializing the class. When appending the `endpoint_path`, the [`urllib.parse.urljoin()`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin) function is used.
+
+The below code will send a POST request to the URL `https://example.com/api/v1/events`:
+
+```python
+from keboola.client import HttpClient
+
+BASE_URL = 'https://example.com/api/v1'
+cl = HttpClient(BASE_URL)
+
+header = {'token': 'token_value'}
+cl.post_raw('events', headers=header)
+```
+
+It is also possible to override this behavior by using parameter `is_absolute_path=True`. If specified, the value of `endpoint_path` will not be appended to the `base_url` parameter, but will rather be used as an absolute URL to which the HTTP request will be made.
+
+In the below code, the `base_url` parameter is set to `https://example.com/api/v1`, but the base URL will be overriden by specifying `is_absolute_path=True` and the HTTP request will be made to the URL specified in the `post()` request - `https://anothersite.com/v2`.
+
+```python
+from keboola.client import HttpClient
+
+BASE_URL = 'https://example.com/api/v1'
+cl = HttpClient(BASE_URL)
+
+header = {'token': 'token_value'}
+cl.post_raw('https://anothersite.com/v2', headers=header, is_absolute_path=True)
 ```
 
 #### Usage Example
 
+A simple request made with default authentication header and parameters.
+
 ```python
 import os
-from urllib.parse import urljoin
 from keboola.client import HttpClient
 
 BASE_URL = 'https://connection.keboola.com/v2/'
@@ -137,8 +168,7 @@ TOKEN = os.environ['TOKEN']
 cl = HttpClient(BASE_URL, auth_header={'x-storageapi-token': TOKEN})
 
 request_params = {'exclude': 'components'}
-response = cl.get_raw(url=urljoin(self.base_url, 'storage'),
-                      params=request_params)
+response = cl.get_raw('storage', params=request_params)
 
 if response.ok is True:
     print(response.json())

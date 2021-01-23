@@ -32,16 +32,16 @@ class HttpClient:
             max_retries: Total number of retries to allow.
             backoff_factor:  A back-off factor to apply between attempts.
             status_forcelist:  A set of HTTP status codes that we should force a retry on. e.g. [500,502]
-            default_http_header (dict): Default header to be sent with each request
-                                        eg. {
-                                                        'Content-Type' : 'application/json',
-                                                        'Accept' : 'application/json'}
-            auth_header (dict): Auth header to be sent with each request
-                                        eg. {'Authorization': 'Bearer ' + token}
+            default_http_header: Default header to be sent with each request
+                eg. {
+                        'Content-Type' : 'application/json',
+                        'Accept' : 'application/json'
+                    }
+            auth_header: Auth header to be sent with each request
+                eg. {'Authorization': 'Bearer ' + token}
             auth: Default Authentication tuple or object to attach to (from  requests.Session().auth).
-                    eg. auth = (user, password)
-            default_params (dict): default parameters to be sent with each request eg. {'param':'value'}
-
+                eg. auth = (user, password)
+            default_params: default parameters to be sent with each request eg. {'param':'value'}
         """
         if base_url is None:
             raise ValueError("Base URL is required.")
@@ -78,7 +78,7 @@ class HttpClient:
 
         Args:
             method: A HTTP method to be used. One of PUT/POST/PATCH/GET/UPDATE/DELETE
-            url: A URL or URL path.
+            endpoint_path: A URL or URL path.
             **kwargs: Key word arguments to pass to the requests.request.
                 Accepts supported params in requests.sessions.Session#request
                 eg. params = {'locId':'1'}, header = {some additional header}
@@ -90,7 +90,6 @@ class HttpClient:
             A requests.Response object.
         """
         s = requests.Session()
-        print(kwargs.get('headers'))
 
         # URL Specification
         if kwargs.pop('is_absolute_path', False) is False:
@@ -111,19 +110,13 @@ class HttpClient:
         # Default headers
         headers.update(self._default_header)
 
-        print(headers)
-
         # Auth headers
         if kwargs.pop('ignore_auth', False) is False:
             headers.update(self._auth_header)
             s.headers.update(headers)
             s.auth = self._auth
 
-        print(headers)
-        print(s.headers)
         s.headers.update(headers)
-
-        print(s.headers)
 
         # Update parameters
         params = kwargs.pop('params', {})
@@ -142,6 +135,8 @@ class HttpClient:
         return r
 
     def response_error_handling(func):
+        """Function, that handles response handling of HTTP requests.
+        """
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             try:
@@ -155,6 +150,21 @@ class HttpClient:
                 return r.json()
 
         return wrapper
+
+    def update_auth_header(self, updated_header: Dict, override: bool = False):
+        """
+        Update the default auth header by providing new values.
+
+        Args:
+            updated_header: An updated header which will be used to update the current header.
+            override: If False, the existing header will be updated with new header. If True, the new header will
+                override (replace) the current authentication header.
+        """
+
+        if override is False:
+            self._auth_header.update(updated_header)
+        else:
+            self._auth_header = updated_header
 
     def get_raw(self, *endpoint_path: str, params: Dict = None, headers: Dict = None, is_absolute_path: bool = False,
                 cookies: Cookie = None, ignore_auth: bool = False, **kwargs) -> requests.Response:
