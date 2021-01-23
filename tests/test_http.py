@@ -209,5 +209,16 @@ class TestClientBase(unittest.TestCase):
 
         cl = client.HttpClient('https://example.com', auth_header=existing_header)
         cl.update_auth_header(new_header, override=False)
-
         self.assertDictEqual(cl._auth_header, new_header)
+
+        new_header_2 = {'password': '123'}
+        cl.update_auth_header(new_header_2, override=True)
+        self.assertDictEqual(cl._auth_header, new_header_2)
+
+    def test_update_existing_auth_header(self):
+        existing_header = {'authorization': 'value'}
+        new_header = {'api_token': 'token_value'}
+
+        cl = client.HttpClient('https://example.com', auth_header=existing_header)
+        cl.update_auth_header(new_header, override=False)
+        self.assertDictEqual(cl._auth_header, {**existing_header, **new_header})
