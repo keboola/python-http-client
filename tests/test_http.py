@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch
-import keboola.client.http as client
+import keboola.http_client.http as client
 
 
 class TestClientBase(unittest.TestCase):

@@ -10,7 +10,7 @@ It is being developed by the Keboola Data Services team and officially supported
 
 - API Documentation: [API Docs](https://github.com/keboola/python-http-client/blob/main)
 - Source code: [https://github.com/keboola/python-http-client](https://github.com/keboola/python-http-client)
-- PYPI project code: [https://test.pypi.org/project/keboola.client/](https://test.pypi.org/project/keboola.client/)
+- PYPI project code: [https://test.pypi.org/project/keboola.http-client](https://test.pypi.org/project/keboola.http-client)
 - Documentation: [https://developers.keboola.com/extend/component/python-component-library](https://developers.keboola.com/extend/component/python-component-library)
 
 ## Quick Start
@@ -20,13 +20,13 @@ It is being developed by the Keboola Data Services team and officially supported
 The package may be installed via PIP:
 
 ```
-pip install keboola.client
+pip install keboola.http-client
 ```
 
 ### Structure and Functionality
 
 The package contains a single core module:
-- `keboola.client` - Contains the `HttpClient` class for easy manipulation with APIs and external services
+- `keboola.http_client` - Contains the `HttpClient` class for easy manipulation with APIs and external services
 
 ### `HttpClient`
 
@@ -46,10 +46,10 @@ All abovementioned methods support all parameters supported by `requests.request
 
 #### Initialization
 
-The core class is `keboola.client.http.HttpClient`, which can be initialized by specifying the `base_url` parameter:
+The core class is `keboola.http_client.HttpClient`, which can be initialized by specifying the `base_url` parameter:
 
 ```python
-from keboola.client import HttpClient
+from keboola.http_client import HttpClient
 
 BASE_URL = 'https://connection.keboola.com/v2/storage/'
 cl = HttpClient(BASE_URL)
@@ -60,7 +60,7 @@ cl = HttpClient(BASE_URL)
 For `HttpClient`, it is possible to define default arguments, which will be sent with every request. It's possible to define `default_http_header`, `auth_header` and `default_params` - a default header, a default authentication header and default parameters, respectively.
 
 ```python
-from keboola.client import HttpClient
+from keboola.http_client import HttpClient
 
 BASE_URL = 'https://connection.keboola.com/v2/storage/'
 AUTH_HEADER = {
@@ -82,7 +82,7 @@ cl = HttpClient(BASE_URL, default_http_header=DEFAULT_HEADER,
 By specifying the `auth` argument, the `HttpClient` will utilize the basic authentication.
 
 ```python
-from keboola.client import HttpClient
+from keboola.http_client import HttpClient
 
 BASE_URL = 'https://connection.keboola.com/v2/storage/'
 USERNAME = 'TestUser'
@@ -96,7 +96,7 @@ cl = HttpClient(BASE_URL, auth=(USERNAME, PASSWORD))
 Making a simple POST request using `post_raw()` method.
 
 ```python
-from keboola.client import HttpClient
+from keboola.http_client import HttpClient
 
 BASE_URL = 'https://www.example.com/change'
 cl = HttpClient(BASE_URL)
@@ -114,7 +114,7 @@ else:
 Making a simple POST request using `post()` method.
 
 ```python
-from keboola.client import HttpClient
+from keboola.http_client import HttpClient
 
 BASE_URL = 'https://www.example.com/change'
 cl = HttpClient(BASE_URL)
@@ -131,7 +131,7 @@ Each of the methods takes an optional positional argument `endpoint_path`. If sp
 The below code will send a POST request to the URL `https://example.com/api/v1/events`:
 
 ```python
-from keboola.client import HttpClient
+from keboola.http_client import HttpClient
 
 BASE_URL = 'https://example.com/api/v1'
 cl = HttpClient(BASE_URL)
@@ -145,7 +145,7 @@ It is also possible to override this behavior by using parameter `is_absolute_pa
 In the below code, the `base_url` parameter is set to `https://example.com/api/v1`, but the base URL will be overriden by specifying `is_absolute_path=True` and the HTTP request will be made to the URL specified in the `post()` request - `https://anothersite.com/v2`.
 
 ```python
-from keboola.client import HttpClient
+from keboola.http_client import HttpClient
 
 BASE_URL = 'https://example.com/api/v1'
 cl = HttpClient(BASE_URL)
@@ -160,7 +160,7 @@ A simple request made with default authentication header and parameters.
 
 ```python
 import os
-from keboola.client import HttpClient
+from keboola.http_client import HttpClient
 
 BASE_URL = 'https://connection.keboola.com/v2/'
 TOKEN = os.environ['TOKEN']

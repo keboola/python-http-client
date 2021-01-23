@@ -4,8 +4,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="keboola.client",
-    version="0.1.1",
+    name="keboola.http_client",
+    version="0.1.2",
     author="Keboola KDS Team",
     setup_requires=['pytest-runner', 'flake8'],
     tests_require=['pytest'],
@@ -17,7 +17,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/keboola/python-http-client",
-    packages=['keboola.client'],
+    packages=['keboola.http_client'],
     package_dir={'': 'src'},
     include_package_data=True,
     zip_safe=False,
