@@ -108,7 +108,7 @@ response = cl.post_raw(data=data, headers=header)
 if response.ok is not True:
     raise ValueError(response.json())
 else:
-    return response.json()
+    print(response.json())
 ```
 
 Making a simple POST request using `post()` method.
@@ -154,7 +154,7 @@ header = {'token': 'token_value'}
 cl.post_raw('https://anothersite.com/v2', headers=header, is_absolute_path=True)
 ```
 
-#### Usage Example
+#### Raw request Example
 
 A simple request made with default authentication header and parameters.
 
@@ -172,4 +172,31 @@ response = cl.get_raw('storage', params=request_params)
 
 if response.ok is True:
     print(response.json())
+```
+
+#### Building HTTP client based on HTTPClient Example
+
+This example demonstrates the default use of the HTTPClient as a base for REST API clients.
+
+```python
+from keboola.http_client import HttpClient
+
+BASE_URL = 'https://connection.eu-central-1.keboola.com/v2/storage'
+MAX_RETRIES = 10
+
+
+class KBCStorageClient(HttpClient):
+
+    def __init__(self, storage_token):
+        HttpClient.__init__(self, base_url=BASE_URL, max_retries=MAX_RETRIES, backoff_factor=0.3,
+                            status_forcelist=(429, 500, 502, 504),
+                            auth_header={"X-StorageApi-Token": storage_token})
+
+    def get_files(self, show_expired=False):
+        params = {"showExpired": show_expired}
+        return self.get('files', params=params)
+
+cl = KBCStorageClient("my_token")
+
+print(cl.get_files())
 ```

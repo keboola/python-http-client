@@ -1,5 +1,7 @@
 import unittest
+import urllib.parse as urlparse
 from unittest.mock import patch
+
 import keboola.http_client.http as client
 
 
@@ -124,18 +126,18 @@ class TestClientBase(unittest.TestCase):
     @patch.object(client.HttpClient, '_request_raw')
     def test_all_methods_skip_auth(self, mock_post):
         url = 'http://example.com/'
-        cl = client.HttpClient(url)
+        cl = client.HttpClient(url, auth_header={"authorization": "xxx"})
 
         for m in ['POST', 'PATCH', 'UPDATE', 'PUT', 'DELETE']:
             method_to_call = getattr(cl, m.lower())
             method_to_call(ignore_auth=True, is_absolute_path=False)
-            mock_post.assert_called_with(m, ignore_auth=True, params=None, headers=None,
+            mock_post.assert_called_with(m, None, ignore_auth=True, params=None, headers=None,
                                          is_absolute_path=False, cookies=None, data=None, files=None, json=None)
 
         for m in ['GET']:
             method_to_call = getattr(cl, m.lower())
             method_to_call(ignore_auth=True, is_absolute_path=False)
-            mock_post.assert_called_with(m, ignore_auth=True, params=None, headers=None,
+            mock_post.assert_called_with(m, None, ignore_auth=True, params=None, headers=None,
                                          is_absolute_path=False, cookies=None)
 
     def test_request_skip_auth_header(self):
@@ -171,7 +173,7 @@ class TestClientBase(unittest.TestCase):
         url = 'http://example.com/'
         cl = client.HttpClient(url)
 
-        for met in ['GET', 'POST', 'PATCH', 'UPDATE', 'PUT']:
+        for met in client.ALLOWED_METHODS:
             cl._request_raw(met, 'http://example2.com/v1/', ignore_auth=False, is_absolute_path=True)
             mock_request.assert_called_with(met, 'http://example2.com/v1/', params={})
 
@@ -222,3 +224,27 @@ class TestClientBase(unittest.TestCase):
         cl = client.HttpClient('https://example.com', auth_header=existing_header)
         cl.update_auth_header(new_header, override=False)
         self.assertDictEqual(cl._auth_header, {**existing_header, **new_header})
+
+    def test_build_url_rel_path(self):
+        url = 'https://example.com/'
+        cl = client.HttpClient(url)
+        self.assertEqual(urlparse.urljoin(url, 'storage'), cl._build_url('storage'))
+
+    def test_build_url_abs_path(self):
+        url = 'https://example.com/'
+        cl = client.HttpClient(url)
+        self.assertEqual('https://example2.com/storage', cl._build_url('https://example2.com/storage', True))
+
+    def test_build_url_empty_endpoint_path_leads_to_base_url(self):
+        url = 'https://example.com/'
+        cl = client.HttpClient(url)
+        self.assertEqual(url, cl._build_url())
+        self.assertEqual(url, cl._build_url(''))
+        self.assertEqual(url, cl._build_url(None))
+        self.assertEqual(url, cl._build_url('', True))
+        self.assertEqual(url, cl._build_url(None, True))
+
+    def test_build_url_base_url_appends_slash(self):
+        url = 'https://example.com'
+        cl = client.HttpClient(url)
+        self.assertEqual('https://example.com/', cl.base_url)
