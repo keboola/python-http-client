@@ -506,9 +506,9 @@ class HttpClient:
         return self.update_raw(endpoint_path, params=params, headers=headers, data=data, json=json, cookies=cookies,
                                is_absolute_path=is_absolute_path, files=files, ignore_auth=ignore_auth, **kwargs)
 
-    def put_raw(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None, data: Dict = None,
-                json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None, files: Dict = None,
-                ignore_auth: bool = False, **kwargs) -> requests.Response:
+    def put_raw(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None,
+                data: Dict = None, json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None,
+                files: Dict = None, ignore_auth: bool = False, **kwargs) -> requests.Response:
         """
         Constructs a requests PUT call with specified url and kwargs to process the result.
 
