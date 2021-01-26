@@ -88,7 +88,7 @@ class HttpClient:
             connect=self.max_retries,
             backoff_factor=self.backoff_factor,
             status_forcelist=self.status_forcelist,
-            allowed_methods=self.method_whitelist
+            allowed_methods=self.allowed_methods
         )
         adapter = HTTPAdapter(max_retries=retry)
         session.mount('http://', adapter)
