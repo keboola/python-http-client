@@ -121,7 +121,7 @@ class TestClientBase(unittest.TestCase):
             cl._request_raw(met, ignore_auth=False, params=cust_par)
             mock_request.assert_called_with(met, url, params=cust_par)
 
-        cl.requests_retry_session().close()
+        cl._requests_retry_session().close()
 
     @patch.object(client.HttpClient, '_request_raw')
     def test_all_methods_skip_auth(self, mock_post):
@@ -144,7 +144,7 @@ class TestClientBase(unittest.TestCase):
         cl = client.HttpClient('http://example.com', default_http_header={"defheader": "test"},
                                auth_header={"Authorization": "test"})
         res = cl._request_raw('POST', 'abc', ignore_auth=True)
-        cl.requests_retry_session().close()
+        cl._requests_retry_session().close()
         self.assertEqual(res.request.url, 'http://example.com/abc')
         self.assertEqual(res.request.headers.get('defheader'), 'test')
         self.assertEqual(res.request.headers.get('Authorization'), None)
@@ -166,7 +166,7 @@ class TestClientBase(unittest.TestCase):
             self.assertEqual(res.request.headers.get('header1'), 'headerval')
             self.assertEqual(res.request.body, 'attr1=val1')
 
-        cl.requests_retry_session().close()
+        cl._requests_retry_session().close()
 
     @patch.object(client.requests.Session, 'request')
     def test_all_methods_requests_raw_with_is_absolute_path_true(self, mock_request):
@@ -177,7 +177,7 @@ class TestClientBase(unittest.TestCase):
             cl._request_raw(met, 'http://example2.com/v1/', ignore_auth=False, is_absolute_path=True)
             mock_request.assert_called_with(met, 'http://example2.com/v1/', params={})
 
-        cl.requests_retry_session().close()
+        cl._requests_retry_session().close()
 
     @patch.object(client.requests.Session, 'request')
     def test_all_methods_requests_raw_with_is_absolute_path_false(self, mock_request):
@@ -188,7 +188,7 @@ class TestClientBase(unittest.TestCase):
             cl._request_raw(met, 'events', ignore_auth=False, is_absolute_path=False)
             mock_request.assert_called_with(met, 'http://example.com/api/v1/events', params={})
 
-        cl.requests_retry_session().close()
+        cl._requests_retry_session().close()
 
     @patch.object(client.requests.Session, 'request')
     def test_all_methods_kwargs(self, mock_request):
@@ -203,18 +203,18 @@ class TestClientBase(unittest.TestCase):
                                             files={'a': '/path/to/file'}, cookies=None, cert='/path/to/cert',
                                             params={'par1': 'val1'}, json=None)
 
-        cl.requests_retry_session().close()
+        cl._requests_retry_session().close()
 
     def test_update_auth_header_None(self):
         existing_header = None
         new_header = {'api_token': 'token_value'}
 
         cl = client.HttpClient('https://example.com', auth_header=existing_header)
-        cl.update_auth_header(new_header, override=False)
+        cl.update_auth_header(new_header, overwrite=False)
         self.assertDictEqual(cl._auth_header, new_header)
 
         new_header_2 = {'password': '123'}
-        cl.update_auth_header(new_header_2, override=True)
+        cl.update_auth_header(new_header_2, overwrite=True)
         self.assertDictEqual(cl._auth_header, new_header_2)
 
     def test_update_existing_auth_header(self):
@@ -222,7 +222,7 @@ class TestClientBase(unittest.TestCase):
         new_header = {'api_token': 'token_value'}
 
         cl = client.HttpClient('https://example.com', auth_header=existing_header)
-        cl.update_auth_header(new_header, override=False)
+        cl.update_auth_header(new_header, overwrite=False)
         self.assertDictEqual(cl._auth_header, {**existing_header, **new_header})
 
     def test_build_url_rel_path(self):

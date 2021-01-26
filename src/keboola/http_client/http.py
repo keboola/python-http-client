@@ -11,13 +11,12 @@ from requests.packages.urllib3.util.retry import Retry
 Cookie = Union[Dict[str, str], CookieJar]
 
 METHOD_RETRY_WHITELIST = ('GET', 'POST', 'PATCH', 'UPDATE', 'PUT', 'DELETE')
-
 ALLOWED_METHODS = ['GET', 'POST', 'PATCH', 'UPDATE', 'PUT', 'DELETE']
 
 
 class HttpClient:
     """
-    Base class for implementing a simple Http client. Typically used as a base for a REST service client.
+    Base class for implementing a simple HTTP client. Typically used as a base for a REST service client.
 
 
     Usage:
@@ -47,7 +46,7 @@ class HttpClient:
     def __init__(self, base_url: str, max_retries: int = 10, backoff_factor: float = 0.3,
                  status_forcelist: Tuple[int, ...] = (500, 502, 504), default_http_header: Dict = None,
                  auth_header: Dict = None, auth: Tuple = None, default_params: Dict = None,
-                 method_whitelist: Tuple = METHOD_RETRY_WHITELIST):
+                 allowed_methods: Tuple = METHOD_RETRY_WHITELIST):
         """
         Create an endpoint.
 
@@ -57,16 +56,16 @@ class HttpClient:
             backoff_factor:  A back-off factor to apply between attempts.
             status_forcelist:  A set of HTTP status codes that we should force a retry on. e.g. [500,502]
             default_http_header: Default header to be sent with each request
-                eg. {
+                eg. ```{
                         'Content-Type' : 'application/json',
                         'Accept' : 'application/json'
-                    }
+                    }```
             auth_header: Auth header to be sent with each request
-                eg. {'Authorization': 'Bearer ' + token}
+                eg. `{'Authorization': 'Bearer ' + token}`
             auth: Default Authentication tuple or object to attach to (from  requests.Session().auth).
                 eg. auth = (user, password)
-            default_params: default parameters to be sent with each request eg. {'param':'value'}
-            method_whitelist (tuple): Set of upper-cased HTTP method verbs that we should retry on.
+            default_params: default parameters to be sent with each request eg. `{'param':'value'}`
+            allowed_methods (tuple): Set of upper-cased HTTP method verbs that we should retry on.
         """
         if base_url is None:
             raise ValueError("Base URL is required.")
@@ -79,9 +78,9 @@ class HttpClient:
         self._auth_header = auth_header if auth_header else {}
         self._default_header = default_http_header if default_http_header else {}
         self._default_params = default_params
-        self.method_whitelist = method_whitelist
+        self.allowed_methods = allowed_methods
 
-    def requests_retry_session(self, session=None):
+    def _requests_retry_session(self, session=None):
         session = session or requests.Session()
         retry = Retry(
             total=self.max_retries,
@@ -89,7 +88,7 @@ class HttpClient:
             connect=self.max_retries,
             backoff_factor=self.backoff_factor,
             status_forcelist=self.status_forcelist,
-            method_whitelist=self.method_whitelist
+            allowed_methods=self.allowed_methods
         )
         adapter = HTTPAdapter(max_retries=retry)
         session.mount('http://', adapter)
@@ -117,7 +116,8 @@ class HttpClient:
         Args:
             method: A HTTP method to be used. One of PUT/POST/PATCH/GET/UPDATE/DELETE
             endpoint_path (Optional[str]): Optional full URL or a relative URL path. If empty the base_url is used.
-            **kwargs: Key word arguments to pass to the requests.request.
+            **kwargs: Key word arguments to pass to the
+                [`requests.request`](https://requests.readthedocs.io/en/latest/api/#requests.request).
                 Accepts supported params in requests.sessions.Session#request
                 eg. params = {'locId':'1'}, header = {some additional header}
                 parameters and headers are appended to the default ones
@@ -125,7 +125,7 @@ class HttpClient:
                 is_absolute_path - False to append URL to base url; True to override base url with value of url arg.
 
         Returns:
-            A requests.Response object.
+            A [`requests.Response`](https://requests.readthedocs.io/en/latest/api/#requests.Response) object.
         """
         s = requests.Session()
 
@@ -162,7 +162,7 @@ class HttpClient:
         else:
             kwargs.update({'params': params})
 
-        r = self.requests_retry_session(session=s).request(method, url, **kwargs)
+        r = self._requests_retry_session(session=s).request(method, url, **kwargs)
         return r
 
     def response_error_handling(func):
@@ -183,49 +183,51 @@ class HttpClient:
 
         return wrapper
 
-    def update_auth_header(self, updated_header: Dict, override: bool = False):
+    def update_auth_header(self, updated_header: Dict, overwrite: bool = False):
         """
-        Update the default auth header by providing new values.
+        Updates the default auth header by providing new values.
 
         Args:
             updated_header: An updated header which will be used to update the current header.
-            override: If False, the existing header will be updated with new header. If True, the new header will
-                override (replace) the current authentication header.
+            overwrite: If `False`, the existing header will be updated with new header. If `True`, the new header will
+                overwrite (replace) the current authentication header.
         """
 
-        if override is False:
+        if overwrite is False:
             self._auth_header.update(updated_header)
         else:
             self._auth_header = updated_header
 
     def get_raw(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None,
-                is_absolute_path: bool = False,
-                cookies: Cookie = None, ignore_auth: bool = False, **kwargs) -> requests.Response:
+                is_absolute_path: bool = False, cookies: Cookie = None,
+                ignore_auth: bool = False, **kwargs) -> requests.Response:
         """
         Constructs a requests GET call with specified url and kwargs to process the result.
 
         Args:
-           endpoint_path:
-                relative URL path or absolute URL to which the request will be made.
-                By default a relative path is expected and will be appended to the `base_url` value.
+            endpoint_path: Relative URL path or absolute URL to which the request will be made.
+                By default a relative path is expected and will be appended to the `self.base_url` value.
 
-                Depending on the value of `is_absolute_path`, the value will be either appended to self.base_url,
+                Depending on the value of `is_absolute_path`, the value will be either appended to `self.base_url`,
                 or used as an absolute URL.
             params: Dictionary to send in the query string for the request.
             headers: Dictionary of HTTP Headers to send with the request.
-            is_absolute_path:
-                A boolean value specifying, whether the URL specified in `endpoint_path` parameter
+            is_absolute_path: A boolean value specifying, whether the URL specified in `endpoint_path` parameter
                 is an absolute path or not.
+
                 If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
-                `urllib.parse.urljoin()` function.
+                [`urllib.parse.urljoin()`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin)
+                function.
+
                 If set to True, base url will be overridden and the value of the `endpoint_path` will
                 used instead.
             cookies: Dict or CookieJar object of cookies to send with the request
             ignore_auth: Boolean marking, whether the default auth_header should be ignored.
-            **kwargs: All other keyword arguments supported by requests.request function.
+            **kwargs: All other keyword arguments supported by
+                [`requests.request`](https://requests.readthedocs.io/en/latest/api/#requests.request).
 
         Returns:
-            A requests.Response object.
+            A [`requests.Response`](https://requests.readthedocs.io/en/latest/api/#requests.Response) object.
         """
 
         method = 'GET'
@@ -234,30 +236,33 @@ class HttpClient:
 
     @response_error_handling
     def get(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None,
-            is_absolute_path: bool = False,
-            cookies: Cookie = None, ignore_auth: bool = False, **kwargs) -> requests.Response:
+            is_absolute_path: bool = False, cookies: Cookie = None,
+            ignore_auth: bool = False, **kwargs) -> requests.Response:
         """
         Constructs a requests GET call with specified url and kwargs to process the result.
 
         Args:
-            endpoint_path:
-                relative URL path or absolute URL to which the request will be made.
-                By default a relative path is expected and will be appended to the `base_url` value.
+            endpoint_path: Relative URL path or absolute URL to which the request will be made.
+                By default a relative path is expected and will be appended to the `self.base_url` value.
 
-                Depending on the value of `is_absolute_path`, the value will be either appended to self.base_url,
+                Depending on the value of `is_absolute_path`, the value will be either appended to `self.base_url`,
                 or used as an absolute URL.
             params: Dictionary to send in the query string for the request.
             headers: Dictionary of HTTP Headers to send with the request.
-            is_absolute_path:
-                A boolean value specifying, whether the URL specified in `endpoint_path` parameter
+            is_absolute_path: A boolean value specifying, whether the URL specified in `endpoint_path` parameter
                 is an absolute path or not.
+
                 If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
-                `urllib.parse.urljoin()` function.
+                [`urllib.parse.urljoin()`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin)
+                function.
+
                 If set to True, base url will be overridden and the value of the `endpoint_path` will
                 used instead.
             cookies: Dict or CookieJar object of cookies to send with the request
+            files: Dictionary of 'name': file-like-objects (or {'name': file-tuple}) for multipart encoding upload.
             ignore_auth: Boolean marking, whether the default auth_header should be ignored.
-            **kwargs: All other keyword arguments supported by requests.request function.
+            **kwargs: All other keyword arguments supported by
+                [`requests.request`](https://requests.readthedocs.io/en/latest/api/#requests.request).
 
         Returns:
             A JSON-encoded response of the request.
@@ -270,37 +275,38 @@ class HttpClient:
                             is_absolute_path=is_absolute_path, ignore_auth=ignore_auth, **kwargs)
 
     def post_raw(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None,
-                 data: Dict = None,
-                 json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None, files: Dict = None,
-                 ignore_auth: bool = False, **kwargs) -> requests.Response:
+                 data: Dict = None, json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None,
+                 files: Dict = None, ignore_auth: bool = False, **kwargs) -> requests.Response:
         """
         Constructs a requests POST call with specified url and kwargs to process the result.
 
         Args:
-            endpoint_path:
-                relative URL path or absolute URL to which the request will be made.
-                By default a relative path is expected and will be appended to the `base_url` value.
+            endpoint_path: Relative URL path or absolute URL to which the request will be made.
+                By default a relative path is expected and will be appended to the `self.base_url` value.
 
-                Depending on the value of `is_absolute_path`, the value will be either appended to self.base_url,
+                Depending on the value of `is_absolute_path`, the value will be either appended to `self.base_url`,
                 or used as an absolute URL.
             params: Dictionary to send in the query string for the request.
             headers: Dictionary of HTTP Headers to send with the request.
             data: Dictionary to send in the body of the request.
             json: A JSON serializable Python object to send in the body of the request.
-            is_absolute_path:
-                A boolean value specifying, whether the URL specified in `endpoint_path` parameter
+            is_absolute_path: A boolean value specifying, whether the URL specified in `endpoint_path` parameter
                 is an absolute path or not.
+
                 If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
-                `urllib.parse.urljoin()` function.
+                [`urllib.parse.urljoin()`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin)
+                function.
+
                 If set to True, base url will be overridden and the value of the `endpoint_path` will
                 used instead.
             cookies: Dict or CookieJar object of cookies to send with the request
             files: Dictionary of 'name': file-like-objects (or {'name': file-tuple}) for multipart encoding upload.
             ignore_auth: Boolean marking, whether the default auth_header should be ignored.
-            **kwargs: All other keyword arguments supported by requests.request function.
+            **kwargs: All other keyword arguments supported by
+                [`requests.request`](https://requests.readthedocs.io/en/latest/api/#requests.request).
 
         Returns:
-            A requests.Response object.
+            A [`requests.Response`](https://requests.readthedocs.io/en/latest/api/#requests.Response) object.
         """
 
         method = 'POST'
@@ -316,27 +322,29 @@ class HttpClient:
         Constructs a requests POST call with specified url and kwargs to process the result.
 
         Args:
-            endpoint_path:
-                relative URL path or absolute URL to which the request will be made.
-                By default a relative path is expected and will be appended to the `base_url` value.
+            endpoint_path: Relative URL path or absolute URL to which the request will be made.
+                By default a relative path is expected and will be appended to the `self.base_url` value.
 
-                Depending on the value of `is_absolute_path`, the value will be either appended to self.base_url,
+                Depending on the value of `is_absolute_path`, the value will be either appended to `self.base_url`,
                 or used as an absolute URL.
             params: Dictionary to send in the query string for the request.
             headers: Dictionary of HTTP Headers to send with the request.
-            is_absolute_path:
-                A boolean value specifying, whether the URL specified in `endpoint_path` parameter
-                is an absolute path or not.
-                If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
-                `urllib.parse.urljoin()` function.
-                If set to True, base url will be overridden and the value of the `endpoint_path` will
-                used instead.
             data: Dictionary to send in the body of the request.
             json: A JSON serializable Python object to send in the body of the request.
+            is_absolute_path: A boolean value specifying, whether the URL specified in `endpoint_path` parameter
+                is an absolute path or not.
+
+                If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
+                [`urllib.parse.urljoin()`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin)
+                function.
+
+                If set to True, base url will be overridden and the value of the `endpoint_path` will
+                used instead.
             cookies: Dict or CookieJar object of cookies to send with the request
             files: Dictionary of 'name': file-like-objects (or {'name': file-tuple}) for multipart encoding upload.
             ignore_auth: Boolean marking, whether the default auth_header should be ignored.
-            **kwargs: All other keyword arguments supported by requests.request function.
+            **kwargs: All other keyword arguments supported by
+                [`requests.request`](https://requests.readthedocs.io/en/latest/api/#requests.request).
 
         Returns:
             A JSON-encoded response of the request.
@@ -349,37 +357,38 @@ class HttpClient:
                              is_absolute_path=is_absolute_path, files=files, ignore_auth=ignore_auth, **kwargs)
 
     def patch_raw(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None,
-                  data: Dict = None,
-                  json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None, files: Dict = None,
-                  ignore_auth: bool = False, **kwargs) -> requests.Response:
+                  data: Dict = None, json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None,
+                  files: Dict = None, ignore_auth: bool = False, **kwargs) -> requests.Response:
         """
         Constructs a requests PATCH call with specified url and kwargs to process the result.
 
         Args:
-            endpoint_path:
-                relative URL path or absolute URL to which the request will be made.
-                By default a relative path is expected and will be appended to the `base_url` value.
+            endpoint_path: Relative URL path or absolute URL to which the request will be made.
+                By default a relative path is expected and will be appended to the `self.base_url` value.
 
-                Depending on the value of `is_absolute_path`, the value will be either appended to self.base_url,
+                Depending on the value of `is_absolute_path`, the value will be either appended to `self.base_url`,
                 or used as an absolute URL.
             params: Dictionary to send in the query string for the request.
             headers: Dictionary of HTTP Headers to send with the request.
-            is_absolute_path:
-                A boolean value specifying, whether the URL specified in `endpoint_path` parameter
-                is an absolute path or not.
-                If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
-                `urllib.parse.urljoin()` function.
-                If set to True, base url will be overridden and the value of the `endpoint_path` will
-                used instead.
             data: Dictionary to send in the body of the request.
             json: A JSON serializable Python object to send in the body of the request.
+            is_absolute_path: A boolean value specifying, whether the URL specified in `endpoint_path` parameter
+                is an absolute path or not.
+
+                If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
+                [`urllib.parse.urljoin()`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin)
+                function.
+
+                If set to True, base url will be overridden and the value of the `endpoint_path` will
+                used instead.
             cookies: Dict or CookieJar object of cookies to send with the request
             files: Dictionary of 'name': file-like-objects (or {'name': file-tuple}) for multipart encoding upload.
             ignore_auth: Boolean marking, whether the default auth_header should be ignored.
-            **kwargs: All other keyword arguments supported by requests.request function.
+            **kwargs: All other keyword arguments supported by
+                [`requests.request`](https://requests.readthedocs.io/en/latest/api/#requests.request).
 
         Returns:
-            A requests.Response object.
+            A [`requests.Response`](https://requests.readthedocs.io/en/latest/api/#requests.Response) object.
         """
 
         method = 'PATCH'
@@ -395,27 +404,29 @@ class HttpClient:
         Constructs a requests PATCH call with specified url and kwargs to process the result.
 
         Args:
-            endpoint_path:
-                relative URL path or absolute URL to which the request will be made.
-                By default a relative path is expected and will be appended to the `base_url` value.
+            endpoint_path: Relative URL path or absolute URL to which the request will be made.
+                By default a relative path is expected and will be appended to the `self.base_url` value.
 
-                Depending on the value of `is_absolute_path`, the value will be either appended to self.base_url,
+                Depending on the value of `is_absolute_path`, the value will be either appended to `self.base_url`,
                 or used as an absolute URL.
             params: Dictionary to send in the query string for the request.
             headers: Dictionary of HTTP Headers to send with the request.
-            is_absolute_path:
-                A boolean value specifying, whether the URL specified in `endpoint_path` parameter
-                is an absolute path or not.
-                If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
-                `urllib.parse.urljoin()` function.
-                If set to True, base url will be overridden and the value of the `endpoint_path` will
-                used instead.
             data: Dictionary to send in the body of the request.
             json: A JSON serializable Python object to send in the body of the request.
+            is_absolute_path: A boolean value specifying, whether the URL specified in `endpoint_path` parameter
+                is an absolute path or not.
+
+                If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
+                [`urllib.parse.urljoin()`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin)
+                function.
+
+                If set to True, base url will be overridden and the value of the `endpoint_path` will
+                used instead.
             cookies: Dict or CookieJar object of cookies to send with the request
             files: Dictionary of 'name': file-like-objects (or {'name': file-tuple}) for multipart encoding upload.
             ignore_auth: Boolean marking, whether the default auth_header should be ignored.
-            **kwargs: All other keyword arguments supported by requests.request function.
+            **kwargs: All other keyword arguments supported by
+                [`requests.request`](https://requests.readthedocs.io/en/latest/api/#requests.request).
 
         Returns:
             A JSON-encoded response of the request.
@@ -428,37 +439,38 @@ class HttpClient:
                               is_absolute_path=is_absolute_path, files=files, ignore_auth=ignore_auth, **kwargs)
 
     def update_raw(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None,
-                   data: Dict = None,
-                   json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None, files: Dict = None,
-                   ignore_auth: bool = False, **kwargs) -> requests.Response:
+                   data: Dict = None, json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None,
+                   files: Dict = None, ignore_auth: bool = False, **kwargs) -> requests.Response:
         """
         Constructs a requests UPDATE call with specified url and kwargs to process the result.
 
         Args:
-            endpoint_path:
-                relative URL path or absolute URL to which the request will be made.
-                By default a relative path is expected and will be appended to the `base_url` value.
+            endpoint_path: Relative URL path or absolute URL to which the request will be made.
+                By default a relative path is expected and will be appended to the `self.base_url` value.
 
-                Depending on the value of `is_absolute_path`, the value will be either appended to self.base_url,
+                Depending on the value of `is_absolute_path`, the value will be either appended to `self.base_url`,
                 or used as an absolute URL.
             params: Dictionary to send in the query string for the request.
             headers: Dictionary of HTTP Headers to send with the request.
-            is_absolute_path:
-                A boolean value specifying, whether the URL specified in `endpoint_path` parameter
-                is an absolute path or not.
-                If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
-                `urllib.parse.urljoin()` function.
-                If set to True, base url will be overridden and the value of the `endpoint_path` will
-                used instead.
             data: Dictionary to send in the body of the request.
             json: A JSON serializable Python object to send in the body of the request.
+            is_absolute_path: A boolean value specifying, whether the URL specified in `endpoint_path` parameter
+                is an absolute path or not.
+
+                If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
+                [`urllib.parse.urljoin()`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin)
+                function.
+
+                If set to True, base url will be overridden and the value of the `endpoint_path` will
+                used instead.
             cookies: Dict or CookieJar object of cookies to send with the request
             files: Dictionary of 'name': file-like-objects (or {'name': file-tuple}) for multipart encoding upload.
             ignore_auth: Boolean marking, whether the default auth_header should be ignored.
-            **kwargs: All other keyword arguments supported by requests.request function.
+            **kwargs: All other keyword arguments supported by
+                [`requests.request`](https://requests.readthedocs.io/en/latest/api/#requests.request).
 
         Returns:
-            A requests.Response object.
+            A [`requests.Response`](https://requests.readthedocs.io/en/latest/api/#requests.Response) object.
         """
 
         method = 'UPDATE'
@@ -474,27 +486,29 @@ class HttpClient:
         Constructs a requests UPDATE call with specified url and kwargs to process the result.
 
         Args:
-            endpoint_path:
-                relative URL path or absolute URL to which the request will be made.
-                By default a relative path is expected and will be appended to the `base_url` value.
+            endpoint_path: Relative URL path or absolute URL to which the request will be made.
+                By default a relative path is expected and will be appended to the `self.base_url` value.
 
-                Depending on the value of `is_absolute_path`, the value will be either appended to self.base_url,
+                Depending on the value of `is_absolute_path`, the value will be either appended to `self.base_url`,
                 or used as an absolute URL.
             params: Dictionary to send in the query string for the request.
             headers: Dictionary of HTTP Headers to send with the request.
-            is_absolute_path:
-                A boolean value specifying, whether the URL specified in `endpoint_path` parameter
-                is an absolute path or not.
-                If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
-                `urllib.parse.urljoin()` function.
-                If set to True, base url will be overridden and the value of the `endpoint_path` will
-                used instead.
             data: Dictionary to send in the body of the request.
             json: A JSON serializable Python object to send in the body of the request.
+            is_absolute_path: A boolean value specifying, whether the URL specified in `endpoint_path` parameter
+                is an absolute path or not.
+
+                If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
+                [`urllib.parse.urljoin()`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin)
+                function.
+
+                If set to True, base url will be overridden and the value of the `endpoint_path` will
+                used instead.
             cookies: Dict or CookieJar object of cookies to send with the request
             files: Dictionary of 'name': file-like-objects (or {'name': file-tuple}) for multipart encoding upload.
             ignore_auth: Boolean marking, whether the default auth_header should be ignored.
-            **kwargs: All other keyword arguments supported by requests.request function.
+            **kwargs: All other keyword arguments supported by
+                [`requests.request`](https://requests.readthedocs.io/en/latest/api/#requests.request).
 
         Returns:
             A JSON-encoded response of the request.
@@ -513,30 +527,32 @@ class HttpClient:
         Constructs a requests PUT call with specified url and kwargs to process the result.
 
         Args:
-            endpoint_path:
-                relative URL path or absolute URL to which the request will be made.
-                By default a relative path is expected and will be appended to the `base_url` value.
+            endpoint_path: Relative URL path or absolute URL to which the request will be made.
+                By default a relative path is expected and will be appended to the `self.base_url` value.
 
-                Depending on the value of `is_absolute_path`, the value will be either appended to self.base_url,
+                Depending on the value of `is_absolute_path`, the value will be either appended to `self.base_url`,
                 or used as an absolute URL.
             params: Dictionary to send in the query string for the request.
             headers: Dictionary of HTTP Headers to send with the request.
-            is_absolute_path:
-                A boolean value specifying, whether the URL specified in `endpoint_path` parameter
-                is an absolute path or not.
-                If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
-                `urllib.parse.urljoin()` function.
-                If set to True, base url will be overridden and the value of the `endpoint_path` will
-                used instead.
             data: Dictionary to send in the body of the request.
             json: A JSON serializable Python object to send in the body of the request.
+            is_absolute_path: A boolean value specifying, whether the URL specified in `endpoint_path` parameter
+                is an absolute path or not.
+
+                If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
+                [`urllib.parse.urljoin()`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin)
+                function.
+
+                If set to True, base url will be overridden and the value of the `endpoint_path` will
+                used instead.
             cookies: Dict or CookieJar object of cookies to send with the request
             files: Dictionary of 'name': file-like-objects (or {'name': file-tuple}) for multipart encoding upload.
             ignore_auth: Boolean marking, whether the default auth_header should be ignored.
-            **kwargs: All other keyword arguments supported by requests.request function.
+            **kwargs: All other keyword arguments supported by
+                [`requests.request`](https://requests.readthedocs.io/en/latest/api/#requests.request).
 
         Returns:
-            A requests.Response object.
+            A [`requests.Response`](https://requests.readthedocs.io/en/latest/api/#requests.Response) object.
         """
 
         method = 'PUT'
@@ -552,27 +568,29 @@ class HttpClient:
         Constructs a requests PUT call with specified url and kwargs to process the result.
 
         Args:
-            endpoint_path:
-                relative URL path or absolute URL to which the request will be made.
-                By default a relative path is expected and will be appended to the `base_url` value.
+            endpoint_path: Relative URL path or absolute URL to which the request will be made.
+                By default a relative path is expected and will be appended to the `self.base_url` value.
 
-                Depending on the value of `is_absolute_path`, the value will be either appended to self.base_url,
+                Depending on the value of `is_absolute_path`, the value will be either appended to `self.base_url`,
                 or used as an absolute URL.
             params: Dictionary to send in the query string for the request.
             headers: Dictionary of HTTP Headers to send with the request.
-            is_absolute_path:
-                A boolean value specifying, whether the URL specified in `endpoint_path` parameter
-                is an absolute path or not.
-                If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
-                `urllib.parse.urljoin()` function.
-                If set to True, base url will be overridden and the value of the `endpoint_path` will
-                used instead.
             data: Dictionary to send in the body of the request.
             json: A JSON serializable Python object to send in the body of the request.
+            is_absolute_path: A boolean value specifying, whether the URL specified in `endpoint_path` parameter
+                is an absolute path or not.
+
+                If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
+                [`urllib.parse.urljoin()`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin)
+                function.
+
+                If set to True, base url will be overridden and the value of the `endpoint_path` will
+                used instead.
             cookies: Dict or CookieJar object of cookies to send with the request
             files: Dictionary of 'name': file-like-objects (or {'name': file-tuple}) for multipart encoding upload.
             ignore_auth: Boolean marking, whether the default auth_header should be ignored.
-            **kwargs: All other keyword arguments supported by requests.request function.
+            **kwargs: All other keyword arguments supported by
+                [`requests.request`](https://requests.readthedocs.io/en/latest/api/#requests.request).
 
         Returns:
             A JSON-encoded response of the request.
@@ -585,37 +603,38 @@ class HttpClient:
                             is_absolute_path=is_absolute_path, files=files, ignore_auth=ignore_auth, **kwargs)
 
     def delete_raw(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None,
-                   data: Dict = None,
-                   json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None, files: Dict = None,
-                   ignore_auth: bool = False, **kwargs) -> requests.Response:
+                   data: Dict = None, json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None,
+                   files: Dict = None, ignore_auth: bool = False, **kwargs) -> requests.Response:
         """
         Constructs a requests DELETE call with specified url and kwargs to process the result.
 
         Args:
-            endpoint_path:
-                relative URL path or absolute URL to which the request will be made.
-                By default a relative path is expected and will be appended to the `base_url` value.
+            endpoint_path: Relative URL path or absolute URL to which the request will be made.
+                By default a relative path is expected and will be appended to the `self.base_url` value.
 
-                Depending on the value of `is_absolute_path`, the value will be either appended to self.base_url,
+                Depending on the value of `is_absolute_path`, the value will be either appended to `self.base_url`,
                 or used as an absolute URL.
             params: Dictionary to send in the query string for the request.
             headers: Dictionary of HTTP Headers to send with the request.
-            is_absolute_path:
-                A boolean value specifying, whether the URL specified in `endpoint_path` parameter
-                is an absolute path or not.
-                If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
-                `urllib.parse.urljoin()` function.
-                If set to True, base url will be overridden and the value of the `endpoint_path` will
-                used instead.
             data: Dictionary to send in the body of the request.
             json: A JSON serializable Python object to send in the body of the request.
+            is_absolute_path: A boolean value specifying, whether the URL specified in `endpoint_path` parameter
+                is an absolute path or not.
+
+                If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
+                [`urllib.parse.urljoin()`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin)
+                function.
+
+                If set to True, base url will be overridden and the value of the `endpoint_path` will
+                used instead.
             cookies: Dict or CookieJar object of cookies to send with the request
             files: Dictionary of 'name': file-like-objects (or {'name': file-tuple}) for multipart encoding upload.
             ignore_auth: Boolean marking, whether the default auth_header should be ignored.
-            **kwargs: All other keyword arguments supported by requests.request function.
+            **kwargs: All other keyword arguments supported by
+                [`requests.request`](https://requests.readthedocs.io/en/latest/api/#requests.request).
 
         Returns:
-            A requests.Response object.
+            A [`requests.Response`](https://requests.readthedocs.io/en/latest/api/#requests.Response) object.
         """
 
         method = 'DELETE'
@@ -631,27 +650,29 @@ class HttpClient:
         Constructs a requests DELETE call with specified url and kwargs to process the result.
 
         Args:
-            endpoint_path:
-                relative URL path or absolute URL to which the request will be made.
-                By default a relative path is expected and will be appended to the `base_url` value.
+            endpoint_path: Relative URL path or absolute URL to which the request will be made.
+                By default a relative path is expected and will be appended to the `self.base_url` value.
 
-                Depending on the value of `is_absolute_path`, the value will be either appended to self.base_url,
+                Depending on the value of `is_absolute_path`, the value will be either appended to `self.base_url`,
                 or used as an absolute URL.
             params: Dictionary to send in the query string for the request.
             headers: Dictionary of HTTP Headers to send with the request.
-            is_absolute_path:
-                A boolean value specifying, whether the URL specified in `endpoint_path` parameter
-                is an absolute path or not.
-                If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
-                `urllib.parse.urljoin()` function.
-                If set to True, base url will be overridden and the value of the `endpoint_path` will
-                used instead.
             data: Dictionary to send in the body of the request.
             json: A JSON serializable Python object to send in the body of the request.
+            is_absolute_path: A boolean value specifying, whether the URL specified in `endpoint_path` parameter
+                is an absolute path or not.
+
+                If set to False, the value of `endpoint_path` will be appended to `self.base_url` using
+                [`urllib.parse.urljoin()`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin)
+                function.
+
+                If set to True, base url will be overridden and the value of the `endpoint_path` will
+                used instead.
             cookies: Dict or CookieJar object of cookies to send with the request
             files: Dictionary of 'name': file-like-objects (or {'name': file-tuple}) for multipart encoding upload.
             ignore_auth: Boolean marking, whether the default auth_header should be ignored.
-            **kwargs: All other keyword arguments supported by requests.request function.
+            **kwargs: All other keyword arguments supported by
+                [`requests.request`](https://requests.readthedocs.io/en/latest/api/#requests.request).
 
         Returns:
             A JSON-encoded response of the request.

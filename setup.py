@@ -3,10 +3,15 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+project_urls = {
+    'Documentation': 'https://htmlpreview.github.io/?https://raw.githubusercontent.com/keboola/python-http-client/main/docs/api-html/http_client/http.html'
+}
+
 setuptools.setup(
     name="keboola.http_client",
-    version="0.1.2",
+    version="1.0.0",
     author="Keboola KDS Team",
+    project_urls=project_urls,
     setup_requires=['pytest-runner', 'flake8'],
     tests_require=['pytest'],
     install_requires=[
