@@ -1,8 +1,8 @@
-name: BUild & Upload Python Package to PYPI production
+name: Build & Upload Python Package to PYPI production
 
 on:
   release:
-    types: [ created ]
+    types: [ published ]
     branches:
       - main
 
