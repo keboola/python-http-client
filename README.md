@@ -2,15 +2,18 @@
 
 ## Introduction
 
+![Build & Test](https://github.com/keboola/python-http-client/workflows/Build%20&%20Test/badge.svg?branch=main)
+[![Code Climate](https://codeclimate.com/github/keboola/python-http-client/badges/gpa.svg)](https://codeclimate.com/github/keboola/python-http-client)
+
 This library serves as tool to work effectively when sending requests to external services. The library wraps on top of the `requests` library and implements a couple useful method, such as in-built retry, exception raising, etc.
 
 It is being developed by the Keboola Data Services team and officially supported by Keboola. It aims to simplify the Keboola Component creation process, by removing the necessity to write complicated code to work with the APIs effectively.
 
 ## Links
 
-- API Documentation: [API Docs](https://github.com/keboola/python-http-client/blob/main)
+- API Documentation: [API Docs](https://htmlpreview.github.io/?https://raw.githubusercontent.com/keboola/python-http-client/main/docs/api-html/http_client/http.html)
 - Source code: [https://github.com/keboola/python-http-client](https://github.com/keboola/python-http-client)
-- PYPI project code: [https://test.pypi.org/project/keboola.http-client](https://test.pypi.org/project/keboola.http-client)
+- PYPI project code: [https://pypi.org/project/keboola.http-client](https://pypi.org/project/keboola.http-client)
 - Documentation: [https://developers.keboola.com/extend/component/python-component-library](https://developers.keboola.com/extend/component/python-component-library)
 
 ## Quick Start
