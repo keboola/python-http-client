@@ -4,7 +4,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 project_urls = {
-    'Documentation': 'https://htmlpreview.github.io/?https://raw.githubusercontent.com/keboola/python-http-client/main/docs/api-html/http_client/http.html'
+    'Documentation': 'https://htmlpreview.github.io/?https://raw.githubusercontent.com/keboola/'
+                     'python-http-client/main/docs/api-html/http_client/http.html'
 }
 
 setuptools.setup(
