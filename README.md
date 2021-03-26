@@ -4,6 +4,7 @@
 
 ![Build & Test](https://github.com/keboola/python-http-client/workflows/Build%20&%20Test/badge.svg?branch=main)
 [![Code Climate](https://codeclimate.com/github/keboola/python-http-client/badges/gpa.svg)](https://codeclimate.com/github/keboola/python-http-client)
+[![PyPI version](https://badge.fury.io/py/keboola.http-client.svg)](https://badge.fury.io/py/keboola.http-client)
 
 This library serves as tool to work effectively when sending requests to external services. The library wraps on top of the `requests` library and implements a couple useful method, such as in-built retry, exception raising, etc.
 
