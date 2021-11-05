@@ -5,16 +5,16 @@ with open("README.md", "r") as fh:
 
 project_urls = {
     'Documentation': 'https://htmlpreview.github.io/?https://raw.githubusercontent.com/keboola/'
-                     'python-http-client/main/docs/api-html/http_client/http.html'
+                     'python-http-client/main/docs/html/keboola/http_client/index.html'
 }
 
 setuptools.setup(
     name="keboola.http_client",
-    version="1.0.0",
+    version="1.0.1",
     author="Keboola KDS Team",
     project_urls=project_urls,
     setup_requires=['pytest-runner', 'flake8'],
-    tests_require=['pytest'],
+    tests_require=['pytest', 'responses'],
     install_requires=[
         'requests'
     ],
