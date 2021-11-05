@@ -8,6 +8,8 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
+from keboola.http_client.auth import AuthMethodBase
+
 Cookie = Union[Dict[str, str], CookieJar]
 
 METHOD_RETRY_WHITELIST = ('GET', 'POST', 'PATCH', 'UPDATE', 'PUT', 'DELETE')
@@ -45,7 +47,7 @@ class HttpClient:
 
     def __init__(self, base_url: str, max_retries: int = 10, backoff_factor: float = 0.3,
                  status_forcelist: Tuple[int, ...] = (500, 502, 504), default_http_header: Dict = None,
-                 auth_header: Dict = None, auth: Tuple = None, default_params: Dict = None,
+                 auth_header: Dict = None, auth_method: AuthMethodBase = None, default_params: Dict = None,
                  allowed_methods: Tuple = METHOD_RETRY_WHITELIST):
         """
         Create an endpoint.
@@ -62,10 +64,11 @@ class HttpClient:
                     }```
             auth_header: Auth header to be sent with each request
                 eg. `{'Authorization': 'Bearer ' + token}`
-            auth: Default Authentication tuple or object to attach to (from  requests.Session().auth).
-                eg. auth = (user, password)
             default_params: default parameters to be sent with each request eg. `{'param':'value'}`
             allowed_methods (tuple): Set of upper-cased HTTP method verbs that we should retry on.
+            auth_method: AuthMethodBase: requests.aut.AuthBase callable that modifies the request to add
+                    authentication. login() method needs to be called to perform the authentication. All subsequent
+                    request will be authenticated.
         """
         if base_url is None:
             raise ValueError("Base URL is required.")
@@ -74,11 +77,21 @@ class HttpClient:
         self.max_retries = max_retries
         self.backoff_factor = backoff_factor
         self.status_forcelist = status_forcelist
-        self._auth = auth
         self._auth_header = auth_header if auth_header else {}
         self._default_header = default_http_header if default_http_header else {}
         self._default_params = default_params
         self.allowed_methods = allowed_methods
+        self._auth_method = auth_method
+        self._auth = None
+
+    def login(self):
+        """
+        Perform login based on auth method
+
+        """
+        # perform login
+        if self._auth_method:
+            self._auth = self._auth_method.login()
 
     def _requests_retry_session(self, session=None):
         session = session or requests.Session()
