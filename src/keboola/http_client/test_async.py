@@ -4,11 +4,6 @@ import asyncio
 import time
 
 
-async def get_pokemon(client, url):
-    resp = await client.get(url)
-    print(resp.json()['name'])
-
-
 async def async_get():
     pokemons = []
     client = AsyncHttpClient("https://pokeapi.co/api/v2/")
