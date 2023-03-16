@@ -27,12 +27,12 @@ class RetryTransport(httpx.AsyncBaseTransport):
         respect_retry_after_header (bool, optional): Whether to respect the Retry-After header in HTTP responses
             when deciding how long to wait before retrying. Defaults to True.
         retryable_methods (Iterable[str], optional): The HTTP methods that can be retried. Defaults to
-            ["HEAD", "GET", "PUT", "DELETE", "OPTIONS", "TRACE"].
+            ["GET", "PUT", "DELETE", "PATCH"].
         retry_status_codes (Iterable[int], optional): The HTTP status codes that can be retried. Defaults to
             [429, 502, 503, 504].
 
     Attributes:
-        _wrapped_transport (Union[httpx.BaseTransport, httpx.AsyncBaseTransport]): The underlying HTTP transport
+        _wrapped_transport (httpx.AsyncBaseTransport): The underlying HTTP transport
             being wrapped.
         _max_attempts (int): The maximum number of times to retry a request.
         _backoff_factor (float): The factor by which the wait time increases with each retry attempt.
@@ -44,7 +44,7 @@ class RetryTransport(httpx.AsyncBaseTransport):
 
     """
 
-    RETRYABLE_METHODS = frozenset(["HEAD", "GET", "PUT", "DELETE", "OPTIONS", "TRACE"])
+    RETRYABLE_METHODS = frozenset(["GET", "PUT", "DELETE", "PATCH"])
     RETRYABLE_STATUS_CODES = frozenset(
         [
             HTTPStatus.TOO_MANY_REQUESTS,
@@ -86,7 +86,7 @@ class RetryTransport(httpx.AsyncBaseTransport):
                 If True, the waiting time specified in Retry-After header is used for the waiting time.
                 Defaults to True.
             retryable_methods (Iterable[str], optional):
-                The HTTP methods that can be retried. Defaults to ['HEAD', 'GET', 'PUT', 'DELETE', 'OPTIONS', 'TRACE'].
+                The HTTP methods that can be retried. Defaults to ["GET", "PUT", "DELETE", "PATCH"].
             retry_status_codes (Iterable[int], optional):
                 The HTTP status codes that can be retried.
                 Defaults to [429, 502, 503, 504].

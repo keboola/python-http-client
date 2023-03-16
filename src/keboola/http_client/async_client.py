@@ -210,8 +210,8 @@ class AsyncHttpClient:
         Raises:
             requests.HTTPError: If the API request fails.
         """
-
-        r = await self._request_raw(endpoint_path, params=params, headers=headers, cookies=cookies,
+        method = 'GET'
+        r = await self._request_raw(method, endpoint_path, params=params, headers=headers, cookies=cookies,
                                     is_absolute_path=is_absolute_path, ignore_auth=ignore_auth, **kwargs)
         return r
 
