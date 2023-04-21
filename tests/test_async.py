@@ -10,11 +10,11 @@ async def test_post_raw_default_pars_with_none_custom_pars_passes():
     cl = AsyncHttpClient(url, default_params=test_def_par)
 
     cl.client.request = AsyncMock()
-    await cl.post_raw()
+    await cl._post_raw()
 
     cl.client.request.assert_called_with('POST', url, params=test_def_par, headers=None, json=None, content=None)
 
-    await cl.aclose()
+    await cl.client.aclose()
 
 
 @pytest.mark.asyncio
@@ -28,7 +28,7 @@ async def test_post_default_pars_with_none_custom_pars_passes():
 
     cl.client.request.assert_called_with('POST', url, params=test_def_par, headers=None, json=None, content=None)
 
-    await cl.aclose()
+    await cl.client.aclose()
 
 
 @pytest.mark.asyncio
@@ -39,12 +39,12 @@ async def test_post_raw_default_pars_with_custom_pars_passes():
 
     cust_par = {"custom_par": "custom_par_value"}
     cl.client.request = AsyncMock()
-    await cl.post_raw(params=cust_par)
+    await cl.client.post_raw(params=cust_par)
 
     test_cust_def_par = {**test_def_par, **cust_par}
     cl.client.request.assert_called_with('POST', url, params=test_cust_def_par, headers=None, json=None, content=None)
 
-    await cl.aclose()
+    await cl.client.aclose()
 
 
 @pytest.mark.asyncio
@@ -60,7 +60,7 @@ async def test_post_default_pars_with_custom_pars_passes():
     test_cust_def_par = {**test_def_par, **cust_par}
     cl.client.request.assert_called_with('POST', url, params=test_cust_def_par, headers=None, json=None, content=None)
 
-    await cl.aclose()
+    await cl.client.aclose()
 
 
 @pytest.mark.asyncio
@@ -71,10 +71,10 @@ async def test_post_raw_default_pars_with_custom_pars_to_None_passes():
 
     cust_par = None
     cl.client.request = AsyncMock()
-    await cl.post_raw(params=cust_par)
+    await cl.client.post_raw(params=cust_par)
 
     _cust_par_transformed = {}
     test_cust_def_par = {**test_def_par, **_cust_par_transformed}
     cl.client.request.assert_called_with('POST', url, params=test_cust_def_par, headers=None, json=None, content=None)
 
-    await cl.aclose()
+    await cl.client.aclose()
