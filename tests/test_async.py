@@ -1,8 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
-from async_client import AsyncHttpClient
-
-import keboola.http_client.async_client.AsyncHttpClient
+from keboola.http_client.async_client import AsyncHttpClient
 
 
 @pytest.mark.asyncio

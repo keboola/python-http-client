@@ -12,7 +12,7 @@ def fetch_pokemon_details_sync(url: str):
 
 async def fetch_pokemon_details_async(client: AsyncHttpClient, endpoint: str):
     response = await client.get(endpoint)
-    return response.json()
+    return response
 
 
 def main_sync():

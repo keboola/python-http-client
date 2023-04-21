@@ -1,3 +1,2 @@
 requests
-httpx==0.20.0
-async_lru
+httpx==0.24.0
