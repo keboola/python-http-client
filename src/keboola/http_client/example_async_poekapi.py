@@ -32,14 +32,16 @@ def main_sync():
 async def main_async():
     base_url = "https://pokeapi.co/api/v2/pokemon/"
     start_time = time.time()
+    client = AsyncHttpClient(base_url=base_url)
+
 
     async def fetch_pokemon(client, i):
         endpoint = f"{i}"
         details = await fetch_pokemon_details_async(client, endpoint)
         return details
 
-    async with AsyncHttpClient(base_url) as client:
-        pokemon_details = await asyncio.gather(*(fetch_pokemon(client, i) for i in range(1, 152)))
+    async with client as c:
+        pokemon_details = await asyncio.gather(*(fetch_pokemon(c, poke_id) for poke_id in range(1, 152)))
 
     end_time = time.time()
     print(f"Async: Fetched details for {len(pokemon_details)} Pokémon in {end_time - start_time:.2f} seconds.")
