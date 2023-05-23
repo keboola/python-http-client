@@ -211,17 +211,15 @@ The package also provides an asynchronous version of the HTTP client called Asyn
 It allows you to make asynchronous requests using async/await syntax. To use the AsyncHttpClient, import it from keboola.http_client_async:
 
 ```python
-from keboola.http_client_async import AsyncHttpClient
+from keboola.http_client import AsyncHttpClient
 ```
 
-The AsyncHttpClient class provides similar functionality as the HttpClient class, but with asynchronous methods such as get, post, put, patch, and delete that return awaitable coroutines.
+The AsyncHttpClient class provides similar functionality as the HttpClient class, but with asynchronous methods such as get, post, put, patch, and delete that return awaitable coroutines. 
 You can use these methods within async functions to perform non-blocking HTTP requests.
-
-For example, to make an asynchronous GET request:
 
 ```python
 import asyncio
-from keboola.http_client_async import AsyncHttpClient
+from keboola.http_client import AsyncHttpClient
 
 async def main():
     base_url = "https://api.example.com/"
@@ -237,5 +235,5 @@ async def main():
 asyncio.run(main())
 ```
 
-The AsyncHttpClient provides similar initialization and request methods as the HttpClient, but the request methods return awaitable coroutines that can be awaited in an asynchronous context. 
-You can use the async with statement to manage the lifecycle of the client and ensure that resources are properly cleaned up.
+The AsyncHttpClient provides similar initialization and request methods as the HttpClient. 
+The request methods return awaitable coroutines that can be awaited in an asynchronous context.
