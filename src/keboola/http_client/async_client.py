@@ -119,36 +119,36 @@ class AsyncHttpClient:
                 await asyncio.sleep(random.uniform(0, backoff_factor))
 
     async def get(self, endpoint: Optional[str] = None, **kwargs) -> Any:
-        response = await self._get_raw(endpoint, **kwargs)
+        response = await self.get_raw(endpoint, **kwargs)
         return response.json()
 
-    async def _get_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
+    async def get_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
         return await self._request("GET", endpoint, **kwargs)
 
     async def post(self, endpoint: Optional[str] = None, **kwargs) -> Any:
-        response = await self._post_raw(endpoint, **kwargs)
+        response = await self.post_raw(endpoint, **kwargs)
         return response.json()
 
-    async def _post_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
+    async def post_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
         return await self._request("POST", endpoint, **kwargs)
 
     async def put(self, endpoint: Optional[str] = None, **kwargs) -> Any:
-        response = await self._put_raw(endpoint, **kwargs)
+        response = await self.put_raw(endpoint, **kwargs)
         return response.json()
 
-    async def _put_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
+    async def put_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
         return await self._request("PUT", endpoint, **kwargs)
 
     async def patch(self, endpoint: Optional[str] = None, **kwargs) -> Any:
-        response = await self._patch_raw(endpoint, **kwargs)
+        response = await self.patch_raw(endpoint, **kwargs)
         return response.json()
 
-    async def _patch_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
+    async def patch_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
         return await self._request("PATCH", endpoint, **kwargs)
 
     async def delete(self, endpoint: Optional[str] = None, **kwargs) -> Any:
-        response = await self._delete_raw(endpoint, **kwargs)
+        response = await self.delete_raw(endpoint, **kwargs)
         return response.json()
 
-    async def _delete_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
+    async def delete_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
         return await self._request("DELETE", endpoint, **kwargs)
