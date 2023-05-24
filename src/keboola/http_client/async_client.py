@@ -83,35 +83,36 @@ class AsyncHttpClient:
             json: Optional[Dict[str, Any]] = None,
             **kwargs
     ) -> httpx.Response:
-        # build URL Specification
+
         is_absolute_path = kwargs.pop('is_absolute_path', False)
         url = await self._build_url(endpoint, is_absolute_path)
 
         all_params = {**self.default_params, **(params or {})}
-        all_headers = {**self.auth_header, **self.default_headers, **(headers or {})}  # include default headers
+        all_headers = {**self.auth_header, **self.default_headers, **(headers or {})}
+
+        request_kwargs = {
+            "method": method,
+            "url": url,
+            "params": all_params,
+            "headers": all_headers
+        }
+
+        if json is not None:
+            request_kwargs["json"] = json
 
         for retry_attempt in range(self.retries + 1):
             try:
                 if self.semaphore:
                     async with self.semaphore:
-                        response = await self.client.request(
-                            method,
-                            url,
-                            params=all_params,
-                            headers=all_headers,
-                            json=json,
-                        )
+                        response = await self.client.request(**request_kwargs)
                 else:
-                    response = await self.client.request(
-                        method,
-                        url,
-                        params=all_params,
-                        headers=all_headers,
-                        json=json,
-                    )
+                    response = await self.client.request(**request_kwargs)
+
                 if response.status_code not in self.retry_status_codes:
                     response.raise_for_status()
+
                 return response
+
             except httpx.HTTPError:
                 if retry_attempt == self.retries:
                     raise

@@ -13,8 +13,6 @@ async def main_async():
     start_time = time.time()
     client = AsyncHttpClient(base_url=base_url)
 
-    # Fetch Pokemon Details
-
     async def fetch_pokemon(client, poke_id):
         try:
             r = await fetch_pokemon_details_async(client, str(poke_id))
