@@ -9,7 +9,7 @@ class AsyncHttpClient:
     """
     An asynchronous HTTP client that simplifies making requests to a specific API.
     """
-
+    ALLOWED_METHODS = ['GET', 'POST', 'PATCH', 'UPDATE', 'PUT', 'DELETE']
     def __init__(
             self,
             base_url: str,
@@ -19,6 +19,7 @@ class AsyncHttpClient:
             retry_status_codes: Optional[List[int]] = None,
             rate_limit: Optional[int] = None,
             default_params: Optional[Dict[str, str]] = None,
+            auth: Optional[tuple] = None,
             auth_header: Optional[Dict[str, str]] = None,
             default_headers: Optional[Dict[str, str]] = None,
             backoff_factor: float = 2.0
@@ -34,6 +35,7 @@ class AsyncHttpClient:
             retry_status_codes (Optional[List[int]], optional): List of status codes to retry on. Defaults to None.
             rate_limit (Optional[int], optional): Maximum number of concurrent requests. Defaults to None.
             default_params (Optional[Dict[str, str]], optional): Default query parameters for each request.
+            auth (Optional[tuple], optional): Authentication credentials for each request. Defaults to None.
             auth_header (Optional[Dict[str, str]], optional): Authentication header for each request. Defaults to None.
             backoff_factor (float, optional): The backoff factor for retries. Defaults to 2.0.
         """
@@ -44,14 +46,16 @@ class AsyncHttpClient:
         self.retry_status_codes = retry_status_codes or []
         self.rate_limit = rate_limit
         self.default_params = default_params or {}
+        self.auth = auth
         self.auth_header = auth_header or {}
         self.semaphore = asyncio.Semaphore(rate_limit) if rate_limit else None
         self.default_headers = default_headers or {}
         self.backoff_factor = backoff_factor
 
-        self.client = httpx.AsyncClient(timeout=self.timeout, verify=self.verify_ssl, headers=self.default_headers)
+        self.client = httpx.AsyncClient(timeout=self.timeout, verify=self.verify_ssl, headers=self.default_headers,
+                                        auth=self.auth)
 
-    async def _build_url(self, endpoint_path: Optional[str] = None, is_absolute_path=False):
+    async def _build_url(self, endpoint_path: Optional[str] = None, is_absolute_path=False) -> str:
         # build URL Specification
         url_path = str(endpoint_path).strip() if endpoint_path is not None else ''
 
@@ -80,33 +84,35 @@ class AsyncHttpClient:
             endpoint: Optional[str] = None,
             params: Optional[Dict[str, Any]] = None,
             headers: Optional[Dict[str, str]] = None,
-            json: Optional[Dict[str, Any]] = None,
             **kwargs
     ) -> httpx.Response:
+
 
         is_absolute_path = kwargs.pop('is_absolute_path', False)
         url = await self._build_url(endpoint, is_absolute_path)
 
         all_params = {**self.default_params, **(params or {})}
-        all_headers = {**self.auth_header, **self.default_headers, **(headers or {})}
 
-        request_kwargs = {
-            "method": method,
-            "url": url,
-            "params": all_params,
-            "headers": all_headers
-        }
+        ignore_auth = kwargs.pop('ignore_auth', False)
+        if ignore_auth:
+            all_headers = {**self.default_headers, **(headers or {})}
+        else:
+            all_headers = {**self.auth_header, **self.default_headers, **(headers or {})}
+            if self.auth:
+                kwargs.update({'auth': self.auth})
 
-        if json is not None:
-            request_kwargs["json"] = json
+        if all_params:
+            kwargs.update({'params': all_params})
+        if all_headers:
+            kwargs.update({'headers': all_headers})
 
         for retry_attempt in range(self.retries + 1):
             try:
                 if self.semaphore:
                     async with self.semaphore:
-                        response = await self.client.request(**request_kwargs)
+                        response = await self.client.request(method, url=url, **kwargs)
                 else:
-                    response = await self.client.request(**request_kwargs)
+                    response = await self.client.request(method, url=url, **kwargs)
 
                 if response.status_code not in self.retry_status_codes:
                     response.raise_for_status()
