@@ -2,7 +2,6 @@ import unittest
 from unittest.mock import patch
 import httpx
 from keboola.http_client import AsyncHttpClient
-from urllib import parse
 
 
 class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
