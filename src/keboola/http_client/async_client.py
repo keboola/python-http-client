@@ -122,8 +122,8 @@ class AsyncHttpClient:
             except httpx.HTTPError:
                 if retry_attempt == self.retries:
                     raise
-                backoff_factor = 2 ** retry_attempt
-                await asyncio.sleep(random.uniform(0, backoff_factor))
+                backoff = self.backoff_factor ** retry_attempt
+                await asyncio.sleep(backoff)
 
     async def get(self, endpoint: Optional[str] = None, **kwargs) -> Any:
         response = await self.get_raw(endpoint, **kwargs)
