@@ -46,7 +46,7 @@ class AsyncHttpClient:
         self.rate_limit = rate_limit
         self.default_params = default_params or {}
         self.auth = auth
-        self.auth_header = auth_header or {}
+        self._auth_header = auth_header or {}
         self.semaphore = asyncio.Semaphore(rate_limit) if rate_limit else None
         self.default_headers = default_headers or {}
         self.backoff_factor = backoff_factor
@@ -66,6 +66,21 @@ class AsyncHttpClient:
             url = endpoint_path
 
         return url
+
+    async def update_auth_header(self, updated_header: Dict, overwrite: bool = False):
+        """
+        Updates the default auth header by providing new values.
+
+        Args:
+            updated_header: An updated header which will be used to update the current header.
+            overwrite: If `False`, the existing header will be updated with new header. If `True`, the new header will
+                overwrite (replace) the current authentication header.
+        """
+
+        if overwrite is False:
+            self._auth_header.update(updated_header)
+        else:
+            self._auth_header = updated_header
 
     async def __aenter__(self):
         await self.client.__aenter__()
@@ -96,7 +111,7 @@ class AsyncHttpClient:
         if ignore_auth:
             all_headers = {**self.default_headers, **(headers or {})}
         else:
-            all_headers = {**self.auth_header, **self.default_headers, **(headers or {})}
+            all_headers = {**self._auth_header, **self.default_headers, **(headers or {})}
             if self.auth:
                 kwargs.update({'auth': self.auth})
 

@@ -274,6 +274,26 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(expected_base_url, cl.base_url)
 
+    async def test_update_auth_header_None(self):
+        existing_header = None
+        new_header = {'api_token': 'token_value'}
+
+        cl = AsyncHttpClient('https://example.com', auth_header=existing_header)
+        await cl.update_auth_header(new_header, overwrite=False)
+        self.assertDictEqual(cl._auth_header, new_header)
+
+        new_header_2 = {'password': '123'}
+        await cl.update_auth_header(new_header_2, overwrite=True)
+        self.assertDictEqual(cl._auth_header, new_header_2)
+
+    async def test_update_existing_auth_header(self):
+        existing_header = {'authorization': 'value'}
+        new_header = {'api_token': 'token_value'}
+
+        cl = AsyncHttpClient('https://example.com', auth_header=existing_header)
+        await cl.update_auth_header(new_header, overwrite=False)
+        self.assertDictEqual(cl._auth_header, {**existing_header, **new_header})
+
 
 if __name__ == "__main__":
     unittest.main()
