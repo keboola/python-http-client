@@ -7,8 +7,7 @@ MAX_RETRIES = 3
 class KBCStorageClient(AsyncHttpClient):
 
     def __init__(self, storage_token):
-        AsyncHttpClient.__init__(
-            self,
+        super().__init__(
             base_url=BASE_URL,
             retries=MAX_RETRIES,
             backoff_factor=0.3,
