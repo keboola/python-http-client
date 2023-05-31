@@ -139,35 +139,35 @@ class AsyncHttpClient:
                 backoff = self.backoff_factor ** retry_attempt
                 await asyncio.sleep(backoff)
 
-    async def get(self, endpoint: Optional[str] = None, **kwargs) -> Any:
+    async def get(self, endpoint: Optional[str] = None, **kwargs) -> Dict[str, Any]:
         response = await self.get_raw(endpoint, **kwargs)
         return response.json()
 
     async def get_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
         return await self._request("GET", endpoint, **kwargs)
 
-    async def post(self, endpoint: Optional[str] = None, **kwargs) -> Any:
+    async def post(self, endpoint: Optional[str] = None, **kwargs) -> Dict[str, Any]:
         response = await self.post_raw(endpoint, **kwargs)
         return response.json()
 
     async def post_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
         return await self._request("POST", endpoint, **kwargs)
 
-    async def put(self, endpoint: Optional[str] = None, **kwargs) -> Any:
+    async def put(self, endpoint: Optional[str] = None, **kwargs) -> Dict[str, Any]:
         response = await self.put_raw(endpoint, **kwargs)
         return response.json()
 
     async def put_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
         return await self._request("PUT", endpoint, **kwargs)
 
-    async def patch(self, endpoint: Optional[str] = None, **kwargs) -> Any:
+    async def patch(self, endpoint: Optional[str] = None, **kwargs) -> Dict[str, Any]:
         response = await self.patch_raw(endpoint, **kwargs)
         return response.json()
 
     async def patch_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
         return await self._request("PATCH", endpoint, **kwargs)
 
-    async def delete(self, endpoint: Optional[str] = None, **kwargs) -> Any:
+    async def delete(self, endpoint: Optional[str] = None, **kwargs) -> Dict[str, Any]:
         response = await self.delete_raw(endpoint, **kwargs)
         return response.json()
 
