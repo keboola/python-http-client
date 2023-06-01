@@ -2,6 +2,7 @@ import httpx
 import asyncio
 from typing import Optional, Dict, Any, List
 from urllib.parse import urljoin
+from aiolimiter import AsyncLimiter
 
 
 class AsyncHttpClient:
@@ -16,7 +17,7 @@ class AsyncHttpClient:
             timeout: Optional[float] = None,
             verify_ssl: bool = True,
             retry_status_codes: Optional[List[int]] = None,
-            rate_limit: Optional[int] = None,
+            max_requests_per_second: Optional[int] = None,
             default_params: Optional[Dict[str, str]] = None,
             auth: Optional[tuple] = None,
             auth_header: Optional[Dict[str, str]] = None,
@@ -32,7 +33,7 @@ class AsyncHttpClient:
             timeout (Optional[float], optional): The request timeout in seconds. Defaults to None.
             verify_ssl (bool, optional): Enable or disable SSL verification. Defaults to True.
             retry_status_codes (Optional[List[int]], optional): List of status codes to retry on. Defaults to None.
-            rate_limit (Optional[int], optional): Maximum number of concurrent requests. Defaults to None.
+            max_requests_per_second (Optional[int], optional): Maximum number of requests per second. Defaults to None.
             default_params (Optional[Dict[str, str]], optional): Default query parameters for each request.
             auth (Optional[tuple], optional): Authentication credentials for each request. Defaults to None.
             auth_header (Optional[Dict[str, str]], optional): Authentication header for each request. Defaults to None.
@@ -43,11 +44,15 @@ class AsyncHttpClient:
         self.timeout = httpx.Timeout(timeout) if timeout else None
         self.verify_ssl = verify_ssl
         self.retry_status_codes = retry_status_codes or []
-        self.rate_limit = rate_limit
         self.default_params = default_params or {}
         self.auth = auth
         self._auth_header = auth_header or {}
-        self.semaphore = asyncio.Semaphore(rate_limit) if rate_limit else None
+
+        self.limiter = None
+        if max_requests_per_second:
+            one_reqeust_per_second_amount = float(1/int(max_requests_per_second))
+            self.limiter = AsyncLimiter(1, one_reqeust_per_second_amount)
+
         self.default_headers = default_headers or {}
         self.backoff_factor = backoff_factor
 
@@ -122,8 +127,8 @@ class AsyncHttpClient:
 
         for retry_attempt in range(self.retries + 1):
             try:
-                if self.semaphore:
-                    async with self.semaphore:
+                if self.limiter:
+                    async with self.limiter:
                         response = await self.client.request(method, url=url, **kwargs)
                 else:
                     response = await self.client.request(method, url=url, **kwargs)

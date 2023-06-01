@@ -11,7 +11,7 @@ async def fetch_pokemon_details_async(client: AsyncHttpClient, endpoint: str):
 async def main_async():
     base_url = "https://pokeapi.co/api/v2/pokemon/"
     start_time = time.time()
-    client = AsyncHttpClient(base_url=base_url)
+    client = AsyncHttpClient(base_url=base_url, max_requests_per_second=10)
 
     async def fetch_pokemon(client, poke_id):
         try:

@@ -1,2 +1,3 @@
 requests
 httpx==0.24.0
+aiolimiter==1.1.0
