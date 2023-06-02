@@ -178,3 +178,46 @@ class AsyncHttpClient:
 
     async def delete_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
         return await self._request("DELETE", endpoint, **kwargs)
+
+    async def process_multiple(self, jobs: List[Dict[str, Any]]):
+        tasks = []
+
+        for job in jobs:
+            method = job['method']
+            endpoint = job['endpoint']
+            params = job.get('params')
+            headers = job.get('headers')
+            raw = job.get('raw', False)
+
+            if method == 'GET':
+                if raw:
+                    task = self.get_raw(endpoint, params=params, headers=headers)
+                else:
+                    task = self.get(endpoint, params=params, headers=headers)
+            elif method == 'POST':
+                if raw:
+                    task = self.post_raw(endpoint, params=params, headers=headers)
+                else:
+                    task = self.post(endpoint, params=params, headers=headers)
+            elif method == 'PUT':
+                if raw:
+                    task = self.put_raw(endpoint, params=params, headers=headers)
+                else:
+                    task = self.put(endpoint, params=params, headers=headers)
+            elif method == 'PATCH':
+                if raw:
+                    task = self.patch_raw(endpoint, params=params, headers=headers)
+                else:
+                    task = self.patch(endpoint, params=params, headers=headers)
+            elif method == 'DELETE':
+                if raw:
+                    task = self.delete_raw(endpoint, params=params, headers=headers)
+                else:
+                    task = self.delete(endpoint, params=params, headers=headers)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            tasks.append(task)
+
+        responses = await asyncio.gather(*tasks)
+        return responses
