@@ -125,6 +125,8 @@ class AsyncHttpClient:
         if all_headers:
             kwargs.update({'headers': all_headers})
 
+        response = None
+
         for retry_attempt in range(self.retries + 1):
             try:
                 if self.limiter:
@@ -133,12 +135,15 @@ class AsyncHttpClient:
                 else:
                     response = await self.client.request(method, url=url, **kwargs)
 
-                if response.status_code not in self.retry_status_codes:
-                    response.raise_for_status()
+                response.raise_for_status()
 
                 return response
 
             except httpx.HTTPError:
+                if response:
+                    if response.status_code not in self.retry_status_codes:
+                        raise
+
                 if retry_attempt == self.retries:
                     raise
                 backoff = self.backoff_factor ** retry_attempt
