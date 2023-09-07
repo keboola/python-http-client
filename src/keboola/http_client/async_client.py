@@ -43,7 +43,7 @@ class AsyncHttpClient:
         self.retries = retries
         self.timeout = httpx.Timeout(timeout) if timeout else None
         self.verify_ssl = verify_ssl
-        self.retry_status_codes = retry_status_codes or []
+        self.retry_status_codes = retry_status_codes or [429, 500, 502, 504]
         self.default_params = default_params or {}
         self.auth = auth
         self._auth_header = auth_header or {}
@@ -65,10 +65,10 @@ class AsyncHttpClient:
 
         if not url_path:
             url = self.base_url
-        elif not is_absolute_path:
-            url = urljoin(self.base_url, endpoint_path)
-        else:
+        elif is_absolute_path:
             url = endpoint_path
+        else:
+            url = urljoin(self.base_url, endpoint_path)
 
         return url
 

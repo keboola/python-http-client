@@ -49,7 +49,7 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
         mock_response = httpx.Response(404)
         mock_response._request = httpx.Request("GET", "https://api.example.com/endpoint")
 
-        client = AsyncHttpClient(self.base_url, retries=self.retries)
+        client = AsyncHttpClient(self.base_url, retries=self.retries, retry_status_codes=[404])
 
         with patch.object(httpx.AsyncClient, 'request', return_value=mock_response) as mock_request:
             with self.assertRaises(httpx.HTTPStatusError):
@@ -63,7 +63,7 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
         mock_response = httpx.Response(500)
         mock_response._request = httpx.Request("GET", "https://api.example.com/endpoint")
 
-        client = AsyncHttpClient(self.base_url, retries=self.retries)
+        client = AsyncHttpClient(self.base_url, retries=self.retries, retry_status_codes=[500])
 
         with patch.object(httpx.AsyncClient, 'request', return_value=mock_response) as mock_request:
             with self.assertRaises(httpx.HTTPStatusError):
