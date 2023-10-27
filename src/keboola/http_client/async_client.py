@@ -3,6 +3,7 @@ import asyncio
 from typing import Optional, Dict, Any, List
 from urllib.parse import urljoin
 from aiolimiter import AsyncLimiter
+import logging
 
 
 class AsyncHttpClient:
@@ -22,7 +23,8 @@ class AsyncHttpClient:
             auth: Optional[tuple] = None,
             auth_header: Optional[Dict[str, str]] = None,
             default_headers: Optional[Dict[str, str]] = None,
-            backoff_factor: float = 2.0
+            backoff_factor: float = 2.0,
+            debug: bool = False
     ):
         """
         Initialize the AsyncHttpClient instance.
@@ -58,6 +60,9 @@ class AsyncHttpClient:
 
         self.client = httpx.AsyncClient(timeout=self.timeout, verify=self.verify_ssl, headers=self.default_headers,
                                         auth=self.auth)
+        
+        if not debug:
+            logging.getLogger("httpx").setLevel(logging.WARNING)
 
     async def _build_url(self, endpoint_path: Optional[str] = None, is_absolute_path=False) -> str:
         # build URL Specification
