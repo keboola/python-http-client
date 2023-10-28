@@ -60,7 +60,7 @@ class AsyncHttpClient:
 
         self.client = httpx.AsyncClient(timeout=self.timeout, verify=self.verify_ssl, headers=self.default_headers,
                                         auth=self.auth)
-        
+
         if not debug:
             logging.getLogger("httpx").setLevel(logging.WARNING)
 
@@ -144,7 +144,7 @@ class AsyncHttpClient:
 
                 return response
 
-            except httpx.HTTPError:
+            except httpx.HTTPError as e:
                 if response:
                     if response.status_code not in self.retry_status_codes:
                         raise
@@ -153,6 +153,8 @@ class AsyncHttpClient:
                     raise
                 backoff = self.backoff_factor ** retry_attempt
                 await asyncio.sleep(backoff)
+
+                logging.warning(f"Retry attempt {retry_attempt + 1} for {method} request to {url}: {e}")
 
     async def get(self, endpoint: Optional[str] = None, **kwargs) -> Dict[str, Any]:
         response = await self.get_raw(endpoint, **kwargs)
