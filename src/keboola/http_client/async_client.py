@@ -63,6 +63,7 @@ class AsyncHttpClient:
 
         if not debug:
             logging.getLogger("httpx").setLevel(logging.WARNING)
+        logging.getLogger("httpcore").setLevel(logging.WARNING)
 
     async def _build_url(self, endpoint_path: Optional[str] = None, is_absolute_path=False) -> str:
         # build URL Specification
