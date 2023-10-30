@@ -61,8 +61,7 @@ class AsyncHttpClient:
         self.client = httpx.AsyncClient(timeout=self.timeout, verify=self.verify_ssl, headers=self.default_headers,
                                         auth=self.auth)
 
-        if not debug:
-            logging.getLogger("httpx").setLevel(logging.WARNING)
+        logging.getLogger("httpx").setLevel(logging.WARNING)
 
     async def _build_url(self, endpoint_path: Optional[str] = None, is_absolute_path=False) -> str:
         # build URL Specification
@@ -141,6 +140,10 @@ class AsyncHttpClient:
                     response = await self.client.request(method, url=url, **kwargs)
 
                 response.raise_for_status()
+
+                log_message = (f"HTTP Request: {method} {url} \"{response.http_version} {response.status_code} "
+                               f"{response.reason_phrase}\"")
+                logging.debug(log_message)
 
                 return response
 
