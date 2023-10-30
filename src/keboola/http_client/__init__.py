@@ -1,1 +1,2 @@
-from .http import HttpClient  # noqa
+from .client import HttpClient  # noqa
+from .async_client import AsyncHttpClient # noqa
