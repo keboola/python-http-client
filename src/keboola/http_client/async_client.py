@@ -23,8 +23,7 @@ class AsyncHttpClient:
             auth: Optional[tuple] = None,
             auth_header: Optional[Dict[str, str]] = None,
             default_headers: Optional[Dict[str, str]] = None,
-            backoff_factor: float = 2.0,
-            debug: bool = False
+            backoff_factor: float = 2.0
     ):
         """
         Initialize the AsyncHttpClient instance.
