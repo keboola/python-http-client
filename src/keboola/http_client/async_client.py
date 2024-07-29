@@ -61,12 +61,10 @@ class AsyncHttpClient:
         self.client = httpx.AsyncClient(timeout=self.timeout, verify=self.verify_ssl, headers=self.default_headers,
                                         auth=self.auth)
 
-        """
         if not debug:
             logging.getLogger("httpx").setLevel(logging.WARNING)
         logging.getLogger("httpcore").setLevel(logging.WARNING)
-        """
-        
+
     async def _build_url(self, endpoint_path: Optional[str] = None, is_absolute_path=False) -> str:
         # build URL Specification
         url_path = str(endpoint_path).strip() if endpoint_path is not None else ''
@@ -157,7 +155,8 @@ class AsyncHttpClient:
                 backoff = self.backoff_factor ** retry_attempt
                 await asyncio.sleep(backoff)
 
-                logging.warning(f"Retry attempt {retry_attempt + 1} for {method} request to {url}: {e}")
+                message = response.text if response.text else str(e)
+                logging.error(f"Retry attempt {retry_attempt + 1} for {method} request to {url}: {message}")
 
     async def get(self, endpoint: Optional[str] = None, **kwargs) -> Dict[str, Any]:
         response = await self.get_raw(endpoint, **kwargs)
