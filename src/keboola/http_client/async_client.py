@@ -61,10 +61,12 @@ class AsyncHttpClient:
         self.client = httpx.AsyncClient(timeout=self.timeout, verify=self.verify_ssl, headers=self.default_headers,
                                         auth=self.auth)
 
+        """
         if not debug:
             logging.getLogger("httpx").setLevel(logging.WARNING)
         logging.getLogger("httpcore").setLevel(logging.WARNING)
-
+        """
+        
     async def _build_url(self, endpoint_path: Optional[str] = None, is_absolute_path=False) -> str:
         # build URL Specification
         url_path = str(endpoint_path).strip() if endpoint_path is not None else ''
