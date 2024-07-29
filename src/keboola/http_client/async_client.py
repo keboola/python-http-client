@@ -155,7 +155,7 @@ class AsyncHttpClient:
                 backoff = self.backoff_factor ** retry_attempt
                 await asyncio.sleep(backoff)
 
-                message = response.text if response.text else str(e)
+                message = response.text if response and response.text else str(e)
                 logging.error(f"Retry attempt {retry_attempt + 1} for {method} request to {url}: {message}")
 
     async def get(self, endpoint: Optional[str] = None, **kwargs) -> Dict[str, Any]:
