@@ -2,7 +2,7 @@ import unittest
 import urllib.parse as urlparse
 from unittest.mock import patch
 
-import keboola.http_client.http as client
+import keboola.http_client.client as client
 
 
 class TestClientBase(unittest.TestCase):

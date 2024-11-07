@@ -6,7 +6,7 @@ from typing import Dict, Union, Tuple, Optional
 
 import requests
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+from requests.packages.urllib3.util.retry import Retry  # noqa
 
 Cookie = Union[Dict[str, str], CookieJar]
 
