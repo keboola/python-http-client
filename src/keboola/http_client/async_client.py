@@ -11,6 +11,7 @@ class AsyncHttpClient:
     An asynchronous HTTP client that simplifies making requests to a specific API.
     """
     ALLOWED_METHODS = ['GET', 'POST', 'PATCH', 'UPDATE', 'PUT', 'DELETE']
+
     def __init__(
             self,
             base_url: str,
@@ -35,7 +36,7 @@ class AsyncHttpClient:
             timeout (Optional[float], optional): The request timeout in seconds. Defaults to None.
             verify_ssl (bool, optional): Enable or disable SSL verification. Defaults to True.
             retry_status_codes (Optional[List[int]], optional): List of status codes to retry on. Defaults to None.
-            max_requests_per_second (Optional[float], optional): Maximum number of requests per second. Defaults to None.
+            max_requests_per_second (Optional[float], optional): Maximum no. of requests per second. Defaults to None.
             default_params (Optional[Dict[str, str]], optional): Default query parameters for each request.
             auth (Optional[tuple], optional): Authentication credentials for each request. Defaults to None.
             auth_header (Optional[Dict[str, str]], optional): Authentication header for each request. Defaults to None.
@@ -52,7 +53,7 @@ class AsyncHttpClient:
 
         self.limiter = None
         if max_requests_per_second:
-            one_reqeust_per_second_amount = float(1/max_requests_per_second)
+            one_reqeust_per_second_amount = float(1 / max_requests_per_second)
             self.limiter = AsyncLimiter(1, one_reqeust_per_second_amount)
 
         self.default_headers = default_headers or {}
@@ -111,7 +112,6 @@ class AsyncHttpClient:
             headers: Optional[Dict[str, str]] = None,
             **kwargs
     ) -> httpx.Response:
-
 
         is_absolute_path = kwargs.pop('is_absolute_path', False)
         url = await self._build_url(endpoint, is_absolute_path)
