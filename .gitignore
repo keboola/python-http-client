@@ -140,3 +140,6 @@ dmypy.json
 
 # MacOS files
 .DS_Store
+
+# Local test script
+/docs/examples/test.py
