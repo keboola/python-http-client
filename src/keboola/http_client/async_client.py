@@ -146,6 +146,10 @@ class AsyncHttpClient:
                 return response
 
             except httpx.HTTPError as e:
+
+                message = response.text if response and response.text else str(e)
+                e.args = (f"Error '{e.response.status_code} {message}' for url '{e.request.url}'",)
+
                 if response:
                     if response.status_code not in self.retry_status_codes:
                         raise
@@ -155,7 +159,6 @@ class AsyncHttpClient:
                 backoff = self.backoff_factor ** retry_attempt
                 await asyncio.sleep(backoff)
 
-                message = response.text if response and response.text else str(e)
                 logging.error(f"Retry attempt {retry_attempt + 1} for {method} request to {url}: {message}")
 
     async def get(self, endpoint: Optional[str] = None, **kwargs) -> Dict[str, Any]:

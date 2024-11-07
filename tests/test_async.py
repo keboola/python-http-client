@@ -294,6 +294,17 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
         await cl.update_auth_header(new_header, overwrite=False)
         self.assertDictEqual(cl._auth_header, {**existing_header, **new_header})
 
+    async def test_detailed_exception(self):
+        mock_response = httpx.Response(404, text="Not Found Because of x")
+        mock_response._request = httpx.Request("GET", "https://api.example.com/endpoint")
+
+        client = AsyncHttpClient(self.base_url)
+
+        with patch.object(httpx.AsyncClient, 'request', return_value=mock_response) as mock_request:
+            with self.assertRaises(httpx.HTTPStatusError) as e:
+                await client.get("/endpoint")
+
+            assert "Error '404 Not Found Because of x' for url 'https://api.example.com/endpoint'" in str(e.exception)
 
 if __name__ == "__main__":
     unittest.main()
