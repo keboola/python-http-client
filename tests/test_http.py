@@ -1,5 +1,5 @@
 import unittest
-import urllib.parse as urlparse
+from urllib.parse import urlparse, urljoin
 from unittest.mock import patch
 
 import keboola.http_client.http as client
@@ -228,7 +228,7 @@ class TestClientBase(unittest.TestCase):
     def test_build_url_rel_path(self):
         url = 'https://example.com/'
         cl = client.HttpClient(url)
-        self.assertEqual(urlparse.urljoin(url, 'storage'), cl._build_url('storage'))
+        self.assertEqual(urljoin(url, 'storage'), cl._build_url('storage'))
 
     def test_build_url_abs_path(self):
         url = 'https://example.com/'
@@ -248,3 +248,36 @@ class TestClientBase(unittest.TestCase):
         url = 'https://example.com'
         cl = client.HttpClient(url)
         self.assertEqual('https://example.com/', cl.base_url)
+
+    def test_build_url_with_spaces(self):
+        base_url = "http://example.com/"
+        cl = client.HttpClient(base_url)
+
+        result = cl._build_url("path/with spaces")
+        expected_path = "path/with%20spaces"
+        parsed = urlparse(result)
+        self.assertEqual(parsed.path, f"/{expected_path}")
+        self.assertEqual(parsed.netloc, "example.com")
+        self.assertEqual(parsed.scheme, "http")
+
+        result = cl._build_url("path?param=space test")
+        expected_query = "param=space test"
+        parsed = urlparse(result)
+        self.assertEqual(parsed.query, expected_query)
+        self.assertEqual(parsed.path, "/path")
+        self.assertEqual(parsed.netloc, "example.com")
+        self.assertEqual(parsed.scheme, "http")
+
+        absolute_result = cl._build_url("http://example.com/absolute path", is_absolute_path=True)
+        expected_absolute = "http://example.com/absolute%20path"
+        self.assertEqual(absolute_result, expected_absolute)
+
+    # test based on SUPPORT-9780
+    def test_build_url_with_complex_path(self):
+        base_url = "http://example.com/"
+        cl = client.HttpClient(base_url)
+
+        result = cl._build_url("ucetni-denik/(datUcto>=2024-10-01 and datUcto<2024-10-30)")
+        expected_path = "ucetni-denik/(datUcto%3E=2024-10-01%20and%20datUcto%3C2024-10-30)"
+        parsed = urlparse(result)
+        self.assertEqual(parsed.path, f"/{expected_path}")

@@ -1,6 +1,6 @@
 import functools
 import logging
-import urllib.parse as urlparse
+from urllib.parse import urlparse, urljoin, quote, urlencode
 from http.cookiejar import CookieJar
 from typing import Dict, Union, Tuple, Optional
 
@@ -100,13 +100,19 @@ class HttpClient:
         url_path = str(endpoint_path).strip() if endpoint_path is not None else ''
 
         if not url_path:
-            url = self.base_url
-        elif not is_absolute_path:
-            url = urlparse.urljoin(self.base_url, endpoint_path)
-        else:
-            url = endpoint_path
+            return self.base_url
 
-        return url
+        if not is_absolute_path:
+            full_path = urljoin(self.base_url, url_path)
+            parsed = urlparse(full_path)
+            encoded_path = quote(parsed.path, safe="/()=-")
+            query = f"?{parsed.query}" if parsed.query else ""
+            return f"{parsed.scheme}://{parsed.netloc}{encoded_path}{query}"
+
+        parsed = urlparse(endpoint_path)
+        encoded_path = quote(parsed.path, safe="/()=-")
+        query = f"?{urlencode(parsed.query, safe='&=')}" if parsed.query else ""
+        return f"{parsed.scheme}://{parsed.netloc}{encoded_path}{query}"
 
     def _request_raw(self, method: str, endpoint_path: Optional[str] = None, **kwargs) -> requests.Response:
         """
