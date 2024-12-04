@@ -110,7 +110,7 @@ class HttpClient:
             return f"{parsed.scheme}://{parsed.netloc}{encoded_path}{query}"
 
         parsed = urlparse(endpoint_path)
-        encoded_path = quote(parsed.path, safe="/()&=<>-")
+        encoded_path = quote(parsed.path, safe="/()=-")
         query = f"?{urlencode(parsed.query, safe='&=')}" if parsed.query else ""
         return f"{parsed.scheme}://{parsed.netloc}{encoded_path}{query}"
 
