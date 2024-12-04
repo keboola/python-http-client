@@ -105,7 +105,7 @@ class HttpClient:
         if not is_absolute_path:
             full_path = urljoin(self.base_url, url_path)
             parsed = urlparse(full_path)
-            encoded_path = quote(parsed.path, safe="/()=<>-&")
+            encoded_path = quote(parsed.path, safe="/()=<>-& ")
             query = f"?{parsed.query}" if parsed.query else ""
             return f"{parsed.scheme}://{parsed.netloc}{encoded_path}{query}"
 
