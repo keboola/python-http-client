@@ -254,7 +254,7 @@ class TestClientBase(unittest.TestCase):
         cl = client.HttpClient(base_url)
 
         result = cl._build_url("path/with spaces")
-        expected_path = "path/with spaces"
+        expected_path = "path/with%20spaces"
         parsed = urlparse(result)
         self.assertEqual(parsed.path, f"/{expected_path}")
         self.assertEqual(parsed.netloc, "example.com")
@@ -269,7 +269,7 @@ class TestClientBase(unittest.TestCase):
         self.assertEqual(parsed.scheme, "http")
 
         absolute_result = cl._build_url("http://example.com/absolute path", is_absolute_path=True)
-        expected_absolute = "http://example.com/absolute path"
+        expected_absolute = "http://example.com/absolute%20path"
         self.assertEqual(absolute_result, expected_absolute)
 
     # test based on SUPPORT-9780
@@ -278,6 +278,6 @@ class TestClientBase(unittest.TestCase):
         cl = client.HttpClient(base_url)
 
         result = cl._build_url("ucetni-denik/(datUcto>=2024-10-01 and datUcto<2024-10-30)")
-        expected_path = "ucetni-denik/(datUcto>=2024-10-01 and datUcto<2024-10-30)"
+        expected_path = "ucetni-denik/(datUcto%3E=2024-10-01%20and%20datUcto%3C2024-10-30)"
         parsed = urlparse(result)
         self.assertEqual(parsed.path, f"/{expected_path}")
