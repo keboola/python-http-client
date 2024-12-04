@@ -101,10 +101,13 @@ class HttpClient:
 
         if not url_path:
             url = self.base_url
+
         elif not is_absolute_path:
-            url = urlparse.urljoin(self.base_url, endpoint_path)
+            full_path = urlparse.urljoin(self.base_url, url_path)
+            url = urlparse.quote(full_path, safe="/()=<>-&")
+
         else:
-            url = endpoint_path
+            url = urlparse.quote(url_path, safe="/()=<>-&")
 
         return url
 
