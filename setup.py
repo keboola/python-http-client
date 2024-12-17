@@ -16,7 +16,8 @@ setuptools.setup(
     setup_requires=['pytest-runner', 'flake8'],
     tests_require=['pytest'],
     install_requires=[
-        'requests'
+        'requests',
+        'httpx'
     ],
     author_email="support@keboola.com",
     description="General HTTP requests library for Python applications running in Keboola Connection environment",
