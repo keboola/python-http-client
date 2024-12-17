@@ -146,9 +146,9 @@ class AsyncHttpClient:
                 return response
 
             except httpx.HTTPError as e:
+                message = response.text if response and response.text else str(e)
 
                 if not isinstance(e, httpx.ReadTimeout):
-                    message = response.text if response and response.text else str(e)
                     e.args = (f"Error '{e.response.status_code} {message}' for url '{e.request.url}'",)
 
                 if response:
