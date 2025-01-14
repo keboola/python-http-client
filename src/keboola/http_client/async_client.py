@@ -46,7 +46,7 @@ class AsyncHttpClient:
         self.retries = retries
         self.timeout = httpx.Timeout(timeout) if timeout else None
         self.verify_ssl = verify_ssl
-        self.retry_status_codes = retry_status_codes or [429, 500, 502, 504]
+        self.retry_status_codes = set(retry_status_codes) if retry_status_codes else {429, 500, 502, 504}
         self.default_params = default_params or {}
         self.auth = auth
         self._auth_header = auth_header or {}
@@ -146,14 +146,14 @@ class AsyncHttpClient:
                 return response
 
             except httpx.HTTPError as e:
+                st_code = response.status_code if response else 0
                 message = response.text if response and response.text else str(e)
 
                 if not isinstance(e, httpx.ReadTimeout):
-                    e.args = (f"Error '{e.response.status_code} {message}' for url '{e.request.url}'",)
+                    e.args = (f"Error '{st_code} {message}' for url '{e.request.url}'",)
 
-                if response:
-                    if response.status_code not in self.retry_status_codes:
-                        raise
+                if st_code not in self.retry_status_codes:
+                    raise
 
                 if retry_attempt == self.retries:
                     raise
