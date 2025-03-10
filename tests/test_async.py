@@ -304,7 +304,7 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(httpx.HTTPStatusError) as e:
                 await client.get("/endpoint")
 
-            assert "Error '404 Not Found Because of x' for url 'https://api.example.com/endpoint'" in str(e.exception)
+            assert "Client error '404 Not Found' for url 'https://api.example.com/endpoint'" in str(e.exception)
 
 if __name__ == "__main__":
     unittest.main()
