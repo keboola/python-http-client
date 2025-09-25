@@ -145,22 +145,34 @@ class AsyncHttpClient:
 
                 return response
 
-            except httpx.HTTPError as e:
-                st_code = response.status_code if response else 0
-                message = response.text if response and response.text else str(e)
+            except (httpx.HTTPError, httpx.ReadError, httpx.ConnectError, httpx.ReadTimeout) as e:
+                if isinstance(e, httpx.HTTPStatusError) and response:
+                    st_code = response.status_code
+                    message = response.text if response.text else str(e)
 
-                if not isinstance(e, httpx.ReadTimeout):
-                    e.args = (f"Error '{st_code} {message}' for url '{e.request.url}'",)
+                    if st_code not in self.retry_status_codes:
+                        raise
+                else:
+                    message = str(e)
 
-                if st_code not in self.retry_status_codes:
-                    raise
+                if hasattr(e, 'request') and e.request:
+                    error_msg = f"Error '{message}' for url '{e.request.url}'"
+                else:
+                    error_msg = f"Error '{message}' for url '{url}'"
 
                 if retry_attempt == self.retries:
-                    raise
-                backoff = self.backoff_factor ** retry_attempt
-                await asyncio.sleep(backoff)
+                    if isinstance(e, httpx.HTTPStatusError):
+                        raise
+                    else:
+                        raise type(e)(error_msg) from e
 
-                logging.error(f"Retry attempt {retry_attempt + 1} for {method} request to {url}: {message}")
+                backoff = self.backoff_factor ** retry_attempt
+                logging.error(
+                    f"Retry attempt {retry_attempt + 1} for {method} request to {url}: "
+                    f"Exception={type(e).__name__}, Message='{message}', "
+                    f"Params={all_params}"
+                )
+                await asyncio.sleep(backoff)
 
     async def get(self, endpoint: Optional[str] = None, **kwargs) -> Dict[str, Any]:
         response = await self.get_raw(endpoint, **kwargs)
