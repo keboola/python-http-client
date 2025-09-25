@@ -204,3 +204,6 @@ cl = KBCStorageClient("my_token")
 
 print(cl.get_files())
 ```
+## License
+
+MIT licensed, see [LICENSE](./LICENSE) file.
