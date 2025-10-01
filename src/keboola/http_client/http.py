@@ -5,7 +5,7 @@ from http.cookiejar import CookieJar
 
 import requests
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry  # noqa
+from urllib3.util import Retry
 
 Cookie = dict[str, str] | CookieJar
 
