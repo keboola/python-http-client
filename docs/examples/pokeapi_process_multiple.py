@@ -1,15 +1,15 @@
 import asyncio
 import csv
 import time
-from typing import List
 
 from keboola.http_client import AsyncHttpClient
 
 
 def generate_jobs(nr_of_jobs):
-    return [{'method': 'GET', 'endpoint': str(endpoint)} for endpoint in range(1, nr_of_jobs+1)]
+    return [{"method": "GET", "endpoint": str(endpoint)} for endpoint in range(1, nr_of_jobs + 1)]
 
-def save_to_csv(results: List[dict]):
+
+def save_to_csv(results: list[dict]):
     filename = "pokemon_details.csv"
     fieldnames = ["name", "height", "weight"]  # Define the fields you want to store
 
@@ -17,11 +17,14 @@ def save_to_csv(results: List[dict]):
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for result in results:
-            writer.writerow({
-                "name": result["name"],
-                "height": result["height"],
-                "weight": result["weight"]
-            })
+            writer.writerow(
+                {
+                    "name": result["name"],
+                    "height": result["height"],
+                    "weight": result["weight"],
+                }
+            )
+
 
 async def main_async():
     base_url = "https://pokeapi.co/api/v2/pokemon/"

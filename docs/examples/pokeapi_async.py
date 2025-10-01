@@ -1,9 +1,11 @@
-import time
 import asyncio
-from keboola.http_client import AsyncHttpClient
 import csv
-import httpx
 import os
+import time
+
+import httpx
+
+from keboola.http_client import AsyncHttpClient
 
 
 async def fetch_pokemon(client, poke_id):
@@ -30,11 +32,13 @@ async def save_to_csv(details):
         if not file_exists:
             writer.writeheader()
 
-        writer.writerow({
-            "name": details["name"],
-            "height": details["height"],
-            "weight": details["weight"]
-        })
+        writer.writerow(
+            {
+                "name": details["name"],
+                "height": details["height"],
+                "weight": details["weight"],
+            }
+        )
 
 
 async def main_async():

@@ -1,31 +1,33 @@
-import httpx
 import asyncio
-from typing import Optional, Dict, Any, List
-from urllib.parse import urljoin
-from aiolimiter import AsyncLimiter
 import logging
+from typing import Any
+from urllib.parse import urljoin
+
+import httpx
+from aiolimiter import AsyncLimiter
 
 
 class AsyncHttpClient:
     """
     An asynchronous HTTP client that simplifies making requests to a specific API.
     """
-    ALLOWED_METHODS = ['GET', 'POST', 'PATCH', 'UPDATE', 'PUT', 'DELETE']
+
+    ALLOWED_METHODS = ["GET", "POST", "PATCH", "UPDATE", "PUT", "DELETE"]
 
     def __init__(
-            self,
-            base_url: str,
-            retries: int = 3,
-            timeout: Optional[float] = None,
-            verify_ssl: bool = True,
-            retry_status_codes: Optional[List[int]] = None,
-            max_requests_per_second: Optional[float] = None,
-            default_params: Optional[Dict[str, str]] = None,
-            auth: Optional[tuple] = None,
-            auth_header: Optional[Dict[str, str]] = None,
-            default_headers: Optional[Dict[str, str]] = None,
-            backoff_factor: float = 2.0,
-            debug: bool = False
+        self,
+        base_url: str,
+        retries: int = 3,
+        timeout: float | None = None,
+        verify_ssl: bool = True,
+        retry_status_codes: list[int] | None = None,
+        max_requests_per_second: float | None = None,
+        default_params: dict[str, str] | None = None,
+        auth: tuple | None = None,
+        auth_header: dict[str, str] | None = None,
+        default_headers: dict[str, str] | None = None,
+        backoff_factor: float = 2.0,
+        debug: bool = False,
     ):
         """
         Initialize the AsyncHttpClient instance.
@@ -59,16 +61,17 @@ class AsyncHttpClient:
         self.default_headers = default_headers or {}
         self.backoff_factor = backoff_factor
 
-        self.client = httpx.AsyncClient(timeout=self.timeout, verify=self.verify_ssl, headers=self.default_headers,
-                                        auth=self.auth)
+        self.client = httpx.AsyncClient(
+            timeout=self.timeout, verify=self.verify_ssl, headers=self.default_headers, auth=self.auth
+        )
 
         if not debug:
             logging.getLogger("httpx").setLevel(logging.WARNING)
         logging.getLogger("httpcore").setLevel(logging.WARNING)
 
-    async def _build_url(self, endpoint_path: Optional[str] = None, is_absolute_path=False) -> str:
+    async def _build_url(self, endpoint_path: str | None = None, is_absolute_path=False) -> str:
         # build URL Specification
-        url_path = str(endpoint_path).strip() if endpoint_path is not None else ''
+        url_path = str(endpoint_path).strip() if endpoint_path is not None else ""
 
         if not url_path:
             url = self.base_url
@@ -79,7 +82,7 @@ class AsyncHttpClient:
 
         return url
 
-    async def update_auth_header(self, updated_header: Dict, overwrite: bool = False):
+    async def update_auth_header(self, updated_header: dict, overwrite: bool = False):
         """
         Updates the default auth header by providing new values.
 
@@ -105,31 +108,30 @@ class AsyncHttpClient:
         await self.client.aclose()
 
     async def _request(
-            self,
-            method: str,
-            endpoint: Optional[str] = None,
-            params: Optional[Dict[str, Any]] = None,
-            headers: Optional[Dict[str, str]] = None,
-            **kwargs
+        self,
+        method: str,
+        endpoint: str | None = None,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        **kwargs,
     ) -> httpx.Response:
-
-        is_absolute_path = kwargs.pop('is_absolute_path', False)
+        is_absolute_path = kwargs.pop("is_absolute_path", False)
         url = await self._build_url(endpoint, is_absolute_path)
 
         all_params = {**self.default_params, **(params or {})}
 
-        ignore_auth = kwargs.pop('ignore_auth', False)
+        ignore_auth = kwargs.pop("ignore_auth", False)
         if ignore_auth:
             all_headers = {**self.default_headers, **(headers or {})}
         else:
             all_headers = {**self._auth_header, **self.default_headers, **(headers or {})}
             if self.auth:
-                kwargs.update({'auth': self.auth})
+                kwargs.update({"auth": self.auth})
 
         if all_params:
-            kwargs.update({'params': all_params})
+            kwargs.update({"params": all_params})
         if all_headers:
-            kwargs.update({'headers': all_headers})
+            kwargs.update({"headers": all_headers})
 
         response = None
 
@@ -155,7 +157,7 @@ class AsyncHttpClient:
                 else:
                     message = str(e)
 
-                if hasattr(e, 'request') and e.request:
+                if hasattr(e, "request") and e.request:
                     error_msg = f"Error '{message}' for url '{e.request.url}'"
                 else:
                     error_msg = f"Error '{message}' for url '{url}'"
@@ -166,7 +168,7 @@ class AsyncHttpClient:
                     else:
                         raise type(e)(error_msg) from e
 
-                backoff = self.backoff_factor ** retry_attempt
+                backoff = self.backoff_factor**retry_attempt
                 logging.error(
                     f"Retry attempt {retry_attempt + 1} for {method} request to {url}: "
                     f"Exception={type(e).__name__}, Message='{message}', "
@@ -174,72 +176,72 @@ class AsyncHttpClient:
                 )
                 await asyncio.sleep(backoff)
 
-    async def get(self, endpoint: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+    async def get(self, endpoint: str | None = None, **kwargs) -> dict[str, Any]:
         response = await self.get_raw(endpoint, **kwargs)
         return response.json()
 
-    async def get_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
+    async def get_raw(self, endpoint: str | None = None, **kwargs) -> httpx.Response:
         return await self._request("GET", endpoint, **kwargs)
 
-    async def post(self, endpoint: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+    async def post(self, endpoint: str | None = None, **kwargs) -> dict[str, Any]:
         response = await self.post_raw(endpoint, **kwargs)
         return response.json()
 
-    async def post_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
+    async def post_raw(self, endpoint: str | None = None, **kwargs) -> httpx.Response:
         return await self._request("POST", endpoint, **kwargs)
 
-    async def put(self, endpoint: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+    async def put(self, endpoint: str | None = None, **kwargs) -> dict[str, Any]:
         response = await self.put_raw(endpoint, **kwargs)
         return response.json()
 
-    async def put_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
+    async def put_raw(self, endpoint: str | None = None, **kwargs) -> httpx.Response:
         return await self._request("PUT", endpoint, **kwargs)
 
-    async def patch(self, endpoint: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+    async def patch(self, endpoint: str | None = None, **kwargs) -> dict[str, Any]:
         response = await self.patch_raw(endpoint, **kwargs)
         return response.json()
 
-    async def patch_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
+    async def patch_raw(self, endpoint: str | None = None, **kwargs) -> httpx.Response:
         return await self._request("PATCH", endpoint, **kwargs)
 
-    async def delete(self, endpoint: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+    async def delete(self, endpoint: str | None = None, **kwargs) -> dict[str, Any]:
         response = await self.delete_raw(endpoint, **kwargs)
         return response.json()
 
-    async def delete_raw(self, endpoint: Optional[str] = None, **kwargs) -> httpx.Response:
+    async def delete_raw(self, endpoint: str | None = None, **kwargs) -> httpx.Response:
         return await self._request("DELETE", endpoint, **kwargs)
 
-    async def process_multiple(self, jobs: List[Dict[str, Any]]):
+    async def process_multiple(self, jobs: list[dict[str, Any]]):
         tasks = []
 
         for job in jobs:
-            method = job['method']
-            endpoint = job['endpoint']
-            params = job.get('params')
-            headers = job.get('headers')
-            raw = job.get('raw', False)
+            method = job["method"]
+            endpoint = job["endpoint"]
+            params = job.get("params")
+            headers = job.get("headers")
+            raw = job.get("raw", False)
 
-            if method == 'GET':
+            if method == "GET":
                 if raw:
                     task = self.get_raw(endpoint, params=params, headers=headers)
                 else:
                     task = self.get(endpoint, params=params, headers=headers)
-            elif method == 'POST':
+            elif method == "POST":
                 if raw:
                     task = self.post_raw(endpoint, params=params, headers=headers)
                 else:
                     task = self.post(endpoint, params=params, headers=headers)
-            elif method == 'PUT':
+            elif method == "PUT":
                 if raw:
                     task = self.put_raw(endpoint, params=params, headers=headers)
                 else:
                     task = self.put(endpoint, params=params, headers=headers)
-            elif method == 'PATCH':
+            elif method == "PATCH":
                 if raw:
                     task = self.patch_raw(endpoint, params=params, headers=headers)
                 else:
                     task = self.patch(endpoint, params=params, headers=headers)
-            elif method == 'DELETE':
+            elif method == "DELETE":
                 if raw:
                     task = self.delete_raw(endpoint, params=params, headers=headers)
                 else:

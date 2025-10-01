@@ -2,16 +2,15 @@ import functools
 import logging
 import urllib.parse as urlparse
 from http.cookiejar import CookieJar
-from typing import Dict, Union, Tuple, Optional
 
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry  # noqa
 
-Cookie = Union[Dict[str, str], CookieJar]
+Cookie = dict[str, str] | CookieJar
 
-METHOD_RETRY_WHITELIST = ('GET', 'POST', 'PATCH', 'UPDATE', 'PUT', 'DELETE')
-ALLOWED_METHODS = ['GET', 'POST', 'PATCH', 'UPDATE', 'PUT', 'DELETE']
+METHOD_RETRY_WHITELIST = ("GET", "POST", "PATCH", "UPDATE", "PUT", "DELETE")
+ALLOWED_METHODS = ["GET", "POST", "PATCH", "UPDATE", "PUT", "DELETE"]
 
 
 class HttpClient:
@@ -43,10 +42,18 @@ class HttpClient:
 
     """
 
-    def __init__(self, base_url: str, max_retries: int = 10, backoff_factor: float = 0.3,
-                 status_forcelist: Tuple[int, ...] = (500, 502, 504), default_http_header: Dict = None,
-                 auth_header: Dict = None, auth: Tuple = None, default_params: Dict = None,
-                 allowed_methods: Tuple = METHOD_RETRY_WHITELIST):
+    def __init__(
+        self,
+        base_url: str,
+        max_retries: int = 10,
+        backoff_factor: float = 0.3,
+        status_forcelist: tuple[int, ...] = (500, 502, 504),
+        default_http_header: dict | None = None,
+        auth_header: dict | None = None,
+        auth: tuple | None = None,
+        default_params: dict | None = None,
+        allowed_methods: tuple = METHOD_RETRY_WHITELIST,
+    ):
         """
         Create an endpoint.
 
@@ -70,7 +77,7 @@ class HttpClient:
         if base_url is None:
             raise ValueError("Base URL is required.")
         # Add trailing slash because of nature of urllib.parse.urljoin()
-        self.base_url = base_url if base_url.endswith('/') else base_url + '/'
+        self.base_url = base_url if base_url.endswith("/") else base_url + "/"
         self.max_retries = max_retries
         self.backoff_factor = backoff_factor
         self.status_forcelist = status_forcelist
@@ -88,16 +95,16 @@ class HttpClient:
             connect=self.max_retries,
             backoff_factor=self.backoff_factor,
             status_forcelist=self.status_forcelist,
-            allowed_methods=self.allowed_methods
+            allowed_methods=self.allowed_methods,
         )
         adapter = HTTPAdapter(max_retries=retry)
-        session.mount('http://', adapter)
-        session.mount('https://', adapter)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
         return session
 
-    def _build_url(self, endpoint_path: Optional[str] = None, is_absolute_path=False):
+    def _build_url(self, endpoint_path: str | None = None, is_absolute_path=False):
         # build URL Specification
-        url_path = str(endpoint_path).strip() if endpoint_path is not None else ''
+        url_path = str(endpoint_path).strip() if endpoint_path is not None else ""
 
         if not url_path:
             url = self.base_url
@@ -108,7 +115,7 @@ class HttpClient:
 
         return url
 
-    def _request_raw(self, method: str, endpoint_path: Optional[str] = None, **kwargs) -> requests.Response:
+    def _request_raw(self, method: str, endpoint_path: str | None = None, **kwargs) -> requests.Response:
         """
         Construct a requests call with args and kwargs and process the
         results.
@@ -130,11 +137,11 @@ class HttpClient:
         s = requests.Session()
 
         # build URL Specification
-        is_absolute_path = kwargs.pop('is_absolute_path', False)
+        is_absolute_path = kwargs.pop("is_absolute_path", False)
         url = self._build_url(endpoint_path, is_absolute_path)
 
         # Update headers
-        headers = kwargs.pop('headers', {})
+        headers = kwargs.pop("headers", {})
         if headers is None:
             headers = {}
 
@@ -142,7 +149,7 @@ class HttpClient:
         headers.update(self._default_header)
 
         # Auth headers
-        if kwargs.pop('ignore_auth', False) is False:
+        if kwargs.pop("ignore_auth", False) is False:
             headers.update(self._auth_header)
             s.headers.update(headers)
             s.auth = self._auth
@@ -150,24 +157,23 @@ class HttpClient:
         s.headers.update(headers)
 
         # Update parameters
-        params = kwargs.pop('params', {})
+        params = kwargs.pop("params", {})
         if params is None:
             params = {}
 
         # Default parameters
         if self._default_params is not None:
             all_pars = {**params, **self._default_params}
-            kwargs.update({'params': all_pars})
+            kwargs.update({"params": all_pars})
 
         else:
-            kwargs.update({'params': params})
+            kwargs.update({"params": params})
 
         r = self._requests_retry_session(session=s).request(method, url, **kwargs)
         return r
 
     def response_error_handling(func):
-        """Function, that handles response handling of HTTP requests.
-        """
+        """Function, that handles response handling of HTTP requests."""
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -183,7 +189,7 @@ class HttpClient:
 
         return wrapper
 
-    def update_auth_header(self, updated_header: Dict, overwrite: bool = False):
+    def update_auth_header(self, updated_header: dict, overwrite: bool = False):
         """
         Updates the default auth header by providing new values.
 
@@ -198,9 +204,16 @@ class HttpClient:
         else:
             self._auth_header = updated_header
 
-    def get_raw(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None,
-                is_absolute_path: bool = False, cookies: Cookie = None,
-                ignore_auth: bool = False, **kwargs) -> requests.Response:
+    def get_raw(
+        self,
+        endpoint_path: str | None = None,
+        params: dict | None = None,
+        headers: dict | None = None,
+        is_absolute_path: bool = False,
+        cookies: Cookie | None = None,
+        ignore_auth: bool = False,
+        **kwargs,
+    ) -> requests.Response:
         """
         Constructs a requests GET call with specified url and kwargs to process the result.
 
@@ -230,14 +243,29 @@ class HttpClient:
             A [`requests.Response`](https://requests.readthedocs.io/en/latest/api/#requests.Response) object.
         """
 
-        method = 'GET'
-        return self._request_raw(method, endpoint_path, params=params, headers=headers, cookies=cookies,
-                                 is_absolute_path=is_absolute_path, ignore_auth=ignore_auth, **kwargs)
+        method = "GET"
+        return self._request_raw(
+            method,
+            endpoint_path,
+            params=params,
+            headers=headers,
+            cookies=cookies,
+            is_absolute_path=is_absolute_path,
+            ignore_auth=ignore_auth,
+            **kwargs,
+        )
 
     @response_error_handling
-    def get(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None,
-            is_absolute_path: bool = False, cookies: Cookie = None,
-            ignore_auth: bool = False, **kwargs) -> requests.Response:
+    def get(
+        self,
+        endpoint_path: str | None = None,
+        params: dict | None = None,
+        headers: dict | None = None,
+        is_absolute_path: bool = False,
+        cookies: Cookie | None = None,
+        ignore_auth: bool = False,
+        **kwargs,
+    ) -> requests.Response:
         """
         Constructs a requests GET call with specified url and kwargs to process the result.
 
@@ -271,12 +299,29 @@ class HttpClient:
             requests.HTTPError: If the API request fails.
         """
 
-        return self.get_raw(endpoint_path, params=params, headers=headers, cookies=cookies,
-                            is_absolute_path=is_absolute_path, ignore_auth=ignore_auth, **kwargs)
+        return self.get_raw(
+            endpoint_path,
+            params=params,
+            headers=headers,
+            cookies=cookies,
+            is_absolute_path=is_absolute_path,
+            ignore_auth=ignore_auth,
+            **kwargs,
+        )
 
-    def post_raw(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None,
-                 data: Dict = None, json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None,
-                 files: Dict = None, ignore_auth: bool = False, **kwargs) -> requests.Response:
+    def post_raw(
+        self,
+        endpoint_path: str | None = None,
+        params: dict | None = None,
+        headers: dict | None = None,
+        data: dict | None = None,
+        json: dict | None = None,
+        is_absolute_path: bool = False,
+        cookies: Cookie | None = None,
+        files: dict | None = None,
+        ignore_auth: bool = False,
+        **kwargs,
+    ) -> requests.Response:
         """
         Constructs a requests POST call with specified url and kwargs to process the result.
 
@@ -309,15 +354,35 @@ class HttpClient:
             A [`requests.Response`](https://requests.readthedocs.io/en/latest/api/#requests.Response) object.
         """
 
-        method = 'POST'
-        return self._request_raw(method, endpoint_path, params=params, headers=headers, data=data, json=json,
-                                 cookies=cookies, is_absolute_path=is_absolute_path, files=files,
-                                 ignore_auth=ignore_auth, **kwargs)
+        method = "POST"
+        return self._request_raw(
+            method,
+            endpoint_path,
+            params=params,
+            headers=headers,
+            data=data,
+            json=json,
+            cookies=cookies,
+            is_absolute_path=is_absolute_path,
+            files=files,
+            ignore_auth=ignore_auth,
+            **kwargs,
+        )
 
     @response_error_handling
-    def post(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None, data: Dict = None,
-             json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None, files: Dict = None,
-             ignore_auth: bool = False, **kwargs) -> requests.Response:
+    def post(
+        self,
+        endpoint_path: str | None = None,
+        params: dict | None = None,
+        headers: dict | None = None,
+        data: dict | None = None,
+        json: dict | None = None,
+        is_absolute_path: bool = False,
+        cookies: Cookie | None = None,
+        files: dict | None = None,
+        ignore_auth: bool = False,
+        **kwargs,
+    ) -> requests.Response:
         """
         Constructs a requests POST call with specified url and kwargs to process the result.
 
@@ -353,12 +418,32 @@ class HttpClient:
             requests.HTTPError: If the API request fails.
         """
 
-        return self.post_raw(endpoint_path, params=params, headers=headers, data=data, json=json, cookies=cookies,
-                             is_absolute_path=is_absolute_path, files=files, ignore_auth=ignore_auth, **kwargs)
+        return self.post_raw(
+            endpoint_path,
+            params=params,
+            headers=headers,
+            data=data,
+            json=json,
+            cookies=cookies,
+            is_absolute_path=is_absolute_path,
+            files=files,
+            ignore_auth=ignore_auth,
+            **kwargs,
+        )
 
-    def patch_raw(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None,
-                  data: Dict = None, json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None,
-                  files: Dict = None, ignore_auth: bool = False, **kwargs) -> requests.Response:
+    def patch_raw(
+        self,
+        endpoint_path: str | None = None,
+        params: dict | None = None,
+        headers: dict | None = None,
+        data: dict | None = None,
+        json: dict | None = None,
+        is_absolute_path: bool = False,
+        cookies: Cookie | None = None,
+        files: dict | None = None,
+        ignore_auth: bool = False,
+        **kwargs,
+    ) -> requests.Response:
         """
         Constructs a requests PATCH call with specified url and kwargs to process the result.
 
@@ -391,15 +476,35 @@ class HttpClient:
             A [`requests.Response`](https://requests.readthedocs.io/en/latest/api/#requests.Response) object.
         """
 
-        method = 'PATCH'
-        return self._request_raw(method, endpoint_path, params=params, headers=headers, data=data, json=json,
-                                 cookies=cookies, is_absolute_path=is_absolute_path, files=files,
-                                 ignore_auth=ignore_auth, **kwargs)
+        method = "PATCH"
+        return self._request_raw(
+            method,
+            endpoint_path,
+            params=params,
+            headers=headers,
+            data=data,
+            json=json,
+            cookies=cookies,
+            is_absolute_path=is_absolute_path,
+            files=files,
+            ignore_auth=ignore_auth,
+            **kwargs,
+        )
 
     @response_error_handling
-    def patch(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None, data: Dict = None,
-              json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None, files: Dict = None,
-              ignore_auth: bool = False, **kwargs) -> requests.Response:
+    def patch(
+        self,
+        endpoint_path: str | None = None,
+        params: dict | None = None,
+        headers: dict | None = None,
+        data: dict | None = None,
+        json: dict | None = None,
+        is_absolute_path: bool = False,
+        cookies: Cookie | None = None,
+        files: dict | None = None,
+        ignore_auth: bool = False,
+        **kwargs,
+    ) -> requests.Response:
         """
         Constructs a requests PATCH call with specified url and kwargs to process the result.
 
@@ -435,12 +540,32 @@ class HttpClient:
             requests.HTTPError: If the API request fails.
         """
 
-        return self.patch_raw(endpoint_path, params=params, headers=headers, data=data, json=json, cookies=cookies,
-                              is_absolute_path=is_absolute_path, files=files, ignore_auth=ignore_auth, **kwargs)
+        return self.patch_raw(
+            endpoint_path,
+            params=params,
+            headers=headers,
+            data=data,
+            json=json,
+            cookies=cookies,
+            is_absolute_path=is_absolute_path,
+            files=files,
+            ignore_auth=ignore_auth,
+            **kwargs,
+        )
 
-    def update_raw(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None,
-                   data: Dict = None, json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None,
-                   files: Dict = None, ignore_auth: bool = False, **kwargs) -> requests.Response:
+    def update_raw(
+        self,
+        endpoint_path: str | None = None,
+        params: dict | None = None,
+        headers: dict | None = None,
+        data: dict | None = None,
+        json: dict | None = None,
+        is_absolute_path: bool = False,
+        cookies: Cookie | None = None,
+        files: dict | None = None,
+        ignore_auth: bool = False,
+        **kwargs,
+    ) -> requests.Response:
         """
         Constructs a requests UPDATE call with specified url and kwargs to process the result.
 
@@ -473,15 +598,35 @@ class HttpClient:
             A [`requests.Response`](https://requests.readthedocs.io/en/latest/api/#requests.Response) object.
         """
 
-        method = 'UPDATE'
-        return self._request_raw(method, endpoint_path, params=params, headers=headers, data=data, json=json,
-                                 cookies=cookies, is_absolute_path=is_absolute_path, files=files,
-                                 ignore_auth=ignore_auth, **kwargs)
+        method = "UPDATE"
+        return self._request_raw(
+            method,
+            endpoint_path,
+            params=params,
+            headers=headers,
+            data=data,
+            json=json,
+            cookies=cookies,
+            is_absolute_path=is_absolute_path,
+            files=files,
+            ignore_auth=ignore_auth,
+            **kwargs,
+        )
 
     @response_error_handling
-    def update(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None, data: Dict = None,
-               json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None, files: Dict = None,
-               ignore_auth: bool = False, **kwargs) -> requests.Response:
+    def update(
+        self,
+        endpoint_path: str | None = None,
+        params: dict | None = None,
+        headers: dict | None = None,
+        data: dict | None = None,
+        json: dict | None = None,
+        is_absolute_path: bool = False,
+        cookies: Cookie | None = None,
+        files: dict | None = None,
+        ignore_auth: bool = False,
+        **kwargs,
+    ) -> requests.Response:
         """
         Constructs a requests UPDATE call with specified url and kwargs to process the result.
 
@@ -517,12 +662,32 @@ class HttpClient:
             requests.HTTPError: If the API request fails.
         """
 
-        return self.update_raw(endpoint_path, params=params, headers=headers, data=data, json=json, cookies=cookies,
-                               is_absolute_path=is_absolute_path, files=files, ignore_auth=ignore_auth, **kwargs)
+        return self.update_raw(
+            endpoint_path,
+            params=params,
+            headers=headers,
+            data=data,
+            json=json,
+            cookies=cookies,
+            is_absolute_path=is_absolute_path,
+            files=files,
+            ignore_auth=ignore_auth,
+            **kwargs,
+        )
 
-    def put_raw(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None,
-                data: Dict = None, json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None,
-                files: Dict = None, ignore_auth: bool = False, **kwargs) -> requests.Response:
+    def put_raw(
+        self,
+        endpoint_path: str | None = None,
+        params: dict | None = None,
+        headers: dict | None = None,
+        data: dict | None = None,
+        json: dict | None = None,
+        is_absolute_path: bool = False,
+        cookies: Cookie | None = None,
+        files: dict | None = None,
+        ignore_auth: bool = False,
+        **kwargs,
+    ) -> requests.Response:
         """
         Constructs a requests PUT call with specified url and kwargs to process the result.
 
@@ -555,15 +720,35 @@ class HttpClient:
             A [`requests.Response`](https://requests.readthedocs.io/en/latest/api/#requests.Response) object.
         """
 
-        method = 'PUT'
-        return self._request_raw(method, endpoint_path, params=params, headers=headers, data=data, json=json,
-                                 cookies=cookies, is_absolute_path=is_absolute_path, files=files,
-                                 ignore_auth=ignore_auth, **kwargs)
+        method = "PUT"
+        return self._request_raw(
+            method,
+            endpoint_path,
+            params=params,
+            headers=headers,
+            data=data,
+            json=json,
+            cookies=cookies,
+            is_absolute_path=is_absolute_path,
+            files=files,
+            ignore_auth=ignore_auth,
+            **kwargs,
+        )
 
     @response_error_handling
-    def put(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None, data: Dict = None,
-            json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None, files: Dict = None,
-            ignore_auth: bool = False, **kwargs) -> requests.Response:
+    def put(
+        self,
+        endpoint_path: str | None = None,
+        params: dict | None = None,
+        headers: dict | None = None,
+        data: dict | None = None,
+        json: dict | None = None,
+        is_absolute_path: bool = False,
+        cookies: Cookie | None = None,
+        files: dict | None = None,
+        ignore_auth: bool = False,
+        **kwargs,
+    ) -> requests.Response:
         """
         Constructs a requests PUT call with specified url and kwargs to process the result.
 
@@ -599,12 +784,32 @@ class HttpClient:
             requests.HTTPError: If the API request fails.
         """
 
-        return self.put_raw(endpoint_path, params=params, headers=headers, data=data, json=json, cookies=cookies,
-                            is_absolute_path=is_absolute_path, files=files, ignore_auth=ignore_auth, **kwargs)
+        return self.put_raw(
+            endpoint_path,
+            params=params,
+            headers=headers,
+            data=data,
+            json=json,
+            cookies=cookies,
+            is_absolute_path=is_absolute_path,
+            files=files,
+            ignore_auth=ignore_auth,
+            **kwargs,
+        )
 
-    def delete_raw(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None,
-                   data: Dict = None, json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None,
-                   files: Dict = None, ignore_auth: bool = False, **kwargs) -> requests.Response:
+    def delete_raw(
+        self,
+        endpoint_path: str | None = None,
+        params: dict | None = None,
+        headers: dict | None = None,
+        data: dict | None = None,
+        json: dict | None = None,
+        is_absolute_path: bool = False,
+        cookies: Cookie | None = None,
+        files: dict | None = None,
+        ignore_auth: bool = False,
+        **kwargs,
+    ) -> requests.Response:
         """
         Constructs a requests DELETE call with specified url and kwargs to process the result.
 
@@ -637,15 +842,35 @@ class HttpClient:
             A [`requests.Response`](https://requests.readthedocs.io/en/latest/api/#requests.Response) object.
         """
 
-        method = 'DELETE'
-        return self._request_raw(method, endpoint_path, params=params, headers=headers, data=data, json=json,
-                                 cookies=cookies, is_absolute_path=is_absolute_path, files=files,
-                                 ignore_auth=ignore_auth, **kwargs)
+        method = "DELETE"
+        return self._request_raw(
+            method,
+            endpoint_path,
+            params=params,
+            headers=headers,
+            data=data,
+            json=json,
+            cookies=cookies,
+            is_absolute_path=is_absolute_path,
+            files=files,
+            ignore_auth=ignore_auth,
+            **kwargs,
+        )
 
     @response_error_handling
-    def delete(self, endpoint_path: Optional[str] = None, params: Dict = None, headers: Dict = None, data: Dict = None,
-               json: Dict = None, is_absolute_path: bool = False, cookies: Cookie = None, files: Dict = None,
-               ignore_auth: bool = False, **kwargs) -> requests.Response:
+    def delete(
+        self,
+        endpoint_path: str | None = None,
+        params: dict | None = None,
+        headers: dict | None = None,
+        data: dict | None = None,
+        json: dict | None = None,
+        is_absolute_path: bool = False,
+        cookies: Cookie | None = None,
+        files: dict | None = None,
+        ignore_auth: bool = False,
+        **kwargs,
+    ) -> requests.Response:
         """
         Constructs a requests DELETE call with specified url and kwargs to process the result.
 
@@ -681,5 +906,15 @@ class HttpClient:
             requests.HTTPError: If the API request fails.
         """
 
-        return self.delete_raw(endpoint_path, params=params, headers=headers, data=data, json=json, cookies=cookies,
-                               is_absolute_path=is_absolute_path, files=files, ignore_auth=ignore_auth, **kwargs)
+        return self.delete_raw(
+            endpoint_path,
+            params=params,
+            headers=headers,
+            data=data,
+            json=json,
+            cookies=cookies,
+            is_absolute_path=is_absolute_path,
+            files=files,
+            ignore_auth=ignore_auth,
+            **kwargs,
+        )
