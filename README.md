@@ -1,3 +1,20 @@
+- [Python HTTP Client](#python-http-client)
+  - [Introduction](#introduction)
+  - [Links](#links)
+  - [Quick Start](#quick-start)
+    - [Installation](#installation)
+    - [Structure and Functionality](#structure-and-functionality)
+    - [`HttpClient`](#httpclient)
+      - [Initialization](#initialization)
+      - [Default arguments](#default-arguments)
+      - [Basic authentication](#basic-authentication)
+      - [Simple POST request](#simple-post-request)
+      - [Working with URL paths](#working-with-url-paths)
+      - [Raw request Example](#raw-request-example)
+      - [Building HTTP client based on HTTPClient Example](#building-http-client-based-on-httpclient-example)
+  - [Async Usage](#async-usage)
+      - [Building HTTP client based on AsyncHttpClient Example](#building-http-client-based-on-asynchttpclient-example)
+
 # Python HTTP Client
 
 ## Introduction
@@ -207,15 +224,14 @@ print(cl.get_files())
 
 ## Async Usage
 
-The package also provides an asynchronous version of the HTTP client called AsyncHttpClient. 
+The package also provides an asynchronous version of the HTTP client called AsyncHttpClient.
 It allows you to make asynchronous requests using async/await syntax. To use the AsyncHttpClient, import it from keboola.http_client_async:
 
 ```python
 from keboola.http_client import AsyncHttpClient
 ```
 
-The AsyncHttpClient class provides similar functionality as the HttpClient class, but with asynchronous methods such as get, post, put, patch, and delete that return awaitable coroutines. 
-You can use these methods within async functions to perform non-blocking HTTP requests.
+The AsyncHttpClient class provides functionality similar to the HttpClient class, but with asynchronous methods such as get, post, put, patch, and delete that return awaitable coroutines. You can use these methods within async functions to perform non-blocking HTTP requests.
 
 ```python
 import asyncio
@@ -235,11 +251,11 @@ async def main():
 asyncio.run(main())
 ```
 
-The AsyncHttpClient provides similar initialization and request methods as the HttpClient. 
+The AsyncHttpClient provides initialization and request methods similar to the HttpClient.
 The request methods return awaitable coroutines that can be awaited in an asynchronous context.
 
 #### Building HTTP client based on AsyncHttpClient Example
-This example demonstrates the default use of the HTTPClient as a base for REST API clients.
+This example demonstrates the default use of the AsyncHttpClient as a base for REST API clients.
 
 ```python
 import asyncio
