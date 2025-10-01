@@ -55,8 +55,8 @@ class AsyncHttpClient:
 
         self.limiter = None
         if max_requests_per_second:
-            one_reqeust_per_second_amount = float(1 / max_requests_per_second)
-            self.limiter = AsyncLimiter(1, one_reqeust_per_second_amount)
+            max_request_duration = float(1 / max_requests_per_second)
+            self.limiter = AsyncLimiter(1, max_request_duration)
 
         self.default_headers = default_headers or {}
         self.backoff_factor = backoff_factor
