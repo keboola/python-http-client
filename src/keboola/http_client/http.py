@@ -1,13 +1,15 @@
+from __future__ import annotations
+
 import functools
 import logging
 import urllib.parse as urlparse
-from http.cookiejar import CookieJar
+from http.cookiejar import CookieJar  # noqa: F401 - false positive caused by stringified type annotation
 
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 
-Cookie = dict[str, str] | CookieJar
+Cookie = "dict[str, str] | CookieJar"
 
 METHOD_RETRY_WHITELIST = ("GET", "POST", "PATCH", "UPDATE", "PUT", "DELETE")
 ALLOWED_METHODS = ["GET", "POST", "PATCH", "UPDATE", "PUT", "DELETE"]
