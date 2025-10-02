@@ -4,16 +4,16 @@
   - [Quick Start](#quick-start)
     - [Installation](#installation)
     - [Structure and Functionality](#structure-and-functionality)
-    - [`HttpClient`](#httpclient)
+    - [HttpClient](#httpclient)
       - [Initialization](#initialization)
-      - [Default arguments](#default-arguments)
-      - [Basic authentication](#basic-authentication)
-      - [Simple POST request](#simple-post-request)
-      - [Working with URL paths](#working-with-url-paths)
-      - [Raw request Example](#raw-request-example)
-      - [Building HTTP client based on HTTPClient Example](#building-http-client-based-on-httpclient-example)
-  - [Async Usage](#async-usage)
-      - [Building HTTP client based on AsyncHttpClient Example](#building-http-client-based-on-asynchttpclient-example)
+      - [Default Arguments](#default-arguments)
+      - [Basic Authentication](#basic-authentication)
+      - [Simple POST Request](#simple-post-request)
+      - [Working with URL Paths](#working-with-url-paths)
+      - [Raw Request Example](#raw-request-example)
+      - [Example Client Based on HTTPClient](#example-client-based-on-httpclient)
+  - [AsyncHttpClient](#asynchttpclient)
+      - [Example Client Based on AsyncHttpClient](#example-client-based-on-asynchttpclient)
 
 # Python HTTP Client
 
@@ -49,7 +49,7 @@ pip install keboola.http-client
 The package contains a single core module:
 - `keboola.http_client` - Contains the `HttpClient` class for easy manipulation with APIs and external services
 
-### `HttpClient`
+### HttpClient
 
 The core class that serves as a tool to communicate with external services. The class is a wrapper around the `requests` library with implemented retry mechanism, and automatic error handling in case of HTTP error returned.
 
@@ -76,7 +76,7 @@ BASE_URL = "https://connection.keboola.com/v2/storage/"
 cl = HttpClient(BASE_URL)
 ```
 
-#### Default arguments
+#### Default Arguments
 
 For `HttpClient`, it is possible to define default arguments, which will be sent with every request. It's possible to define `default_http_header`, `auth_header` and `default_params` - a default header, a default authentication header and default parameters, respectively.
 
@@ -96,7 +96,7 @@ cl = HttpClient(
 )
 ```
 
-#### Basic authentication
+#### Basic Authentication
 
 By specifying the `auth` argument, the `HttpClient` will utilize the basic authentication.
 
@@ -110,7 +110,7 @@ PASSWORD = "@bcd1234"
 cl = HttpClient(BASE_URL, auth=(USERNAME, PASSWORD))
 ```
 
-#### Simple POST request
+#### Simple POST Request
 
 Making a simple POST request using `post_raw()` method.
 
@@ -143,7 +143,7 @@ header = {"content-type": "application/json"}
 response = cl.post(data=data, headers=header)
 ```
 
-#### Working with URL paths
+#### Working with URL Paths
 
 Each of the methods takes an optional positional argument `endpoint_path`. If specified, the value of the `endpoint_path` will be appended to the URL specified in the `base_url` parameter, when initializing the class. When appending the `endpoint_path`, the [`urllib.parse.urljoin()`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin) function is used.
 
@@ -173,7 +173,7 @@ header = {"token": "token_value"}
 cl.post_raw("https://anothersite.com/v2", headers=header, is_absolute_path=True)
 ```
 
-#### Raw request Example
+#### Raw Request Example
 
 A simple request made with default authentication header and parameters.
 
@@ -193,7 +193,7 @@ if response.ok is True:
     print(response.json())
 ```
 
-#### Building HTTP client based on HTTPClient Example
+#### Example Client Based on HTTPClient
 
 This example demonstrates the default use of the HTTPClient as a base for REST API clients.
 
@@ -225,7 +225,7 @@ cl = KBCStorageClient("my_token")
 print(cl.get_files())
 ```
 
-## Async Usage
+## AsyncHttpClient
 
 The package also provides an asynchronous version of the HTTP client called AsyncHttpClient.
 It allows you to make asynchronous requests using async/await syntax. To use the AsyncHttpClient, import it from keboola.http_client_async:
@@ -261,7 +261,8 @@ asyncio.run(main())
 The AsyncHttpClient provides initialization and request methods similar to the HttpClient.
 The request methods return awaitable coroutines that can be awaited in an asynchronous context.
 
-#### Building HTTP client based on AsyncHttpClient Example
+#### Example Client Based on AsyncHttpClient
+
 This example demonstrates the default use of the AsyncHttpClient as a base for REST API clients.
 
 ```py
