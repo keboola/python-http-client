@@ -1,6 +1,6 @@
 [project]
 name = "keboola.http-client"
-version = "1.1.5"
+version = "0.0.0"  # replaced by actual version based on release tag in github actions
 dependencies = [
     "aiolimiter>=1.2.1",
     "httpx>=0.28.1",
