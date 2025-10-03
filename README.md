@@ -12,8 +12,9 @@
       - [Working with URL Paths](#working-with-url-paths)
       - [Raw Request Example](#raw-request-example)
       - [Example Client Based on HTTPClient](#example-client-based-on-httpclient)
-  - [AsyncHttpClient](#asynchttpclient)
+    - [AsyncHttpClient](#asynchttpclient)
       - [Example Client Based on AsyncHttpClient](#example-client-based-on-asynchttpclient)
+  - [License](#license)
 
 # Python HTTP Client
 
@@ -225,7 +226,7 @@ cl = KBCStorageClient("my_token")
 print(cl.get_files())
 ```
 
-## AsyncHttpClient
+### AsyncHttpClient
 
 The package also provides an asynchronous version of the HTTP client called AsyncHttpClient.
 It allows you to make asynchronous requests using async/await syntax. To use the AsyncHttpClient, import it from keboola.http_client_async:
@@ -302,3 +303,7 @@ asyncio.run(main())
 
 **Note:** Since there are no parallel requests being made, you won't notice any speedup for this use case.
 For an example of a noticeable speedup thanks to async requests, see the pokeapi.py in `docs/examples`.
+
+## License
+
+MIT licensed, see [LICENSE](./LICENSE) file.
