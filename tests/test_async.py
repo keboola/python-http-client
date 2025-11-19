@@ -12,10 +12,10 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
 
     @staticmethod
     def create_mock_resp(
-        method: str = "GET",
-        url: str = "https://api.example.com",
+        method: str,
+        url: str,
         status_code: int = 200,
-        json_data: dict | None = None,
+        json_data: "dict | None" = None,
     ):
         """
         Helper method to create a properly configured mock response.
@@ -27,66 +27,67 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
         mock_response._request = httpx.Request(method, url)
         return mock_response
 
-    async def test_get(self):
+    @patch.object(httpx.AsyncClient, "request")
+    async def test_get(self, mock_request):
         expected_response = {"message": "Success"}
-        mock_response = self.create_mock_resp("GET", "https://api.example.com/endpoint", json_data=expected_response)
+        endpoint_url = f"{self.base_url}/endpoint"
+
+        mock_request.return_value = self.create_mock_resp("GET", endpoint_url, json_data=expected_response)
 
         client = AsyncHttpClient(self.base_url, retries=self.retries)
+        response = await client.get("/endpoint")
+        self.assertEqual(response, expected_response)
+        mock_request.assert_called_once_with("GET", url=endpoint_url)
 
-        with patch.object(httpx.AsyncClient, "request", return_value=mock_response) as mock_request:
-            response = await client.get("/endpoint")
-            self.assertEqual(response, expected_response)
-            mock_request.assert_called_once_with("GET", url="https://api.example.com/endpoint")
-
-    async def test_post(self):
+    @patch.object(httpx.AsyncClient, "request")
+    async def test_post(self, mock_request):
         expected_response = {"message": "Success"}
-        mock_response = self.create_mock_resp("POST", "https://api.example.com/endpoint", json_data=expected_response)
+        endpoint_url = f"{self.base_url}/endpoint"
+
+        mock_request.return_value = self.create_mock_resp("POST", endpoint_url, json_data=expected_response)
 
         client = AsyncHttpClient(self.base_url, retries=self.retries)
+        response = await client.post("/endpoint", json={"data": "example"})
+        self.assertEqual(response, expected_response)
+        mock_request.assert_called_once_with("POST", url=endpoint_url, json={"data": "example"})
 
-        with patch.object(httpx.AsyncClient, "request", return_value=mock_response) as mock_request:
-            response = await client.post("/endpoint", json={"data": "example"})
-            self.assertEqual(response, expected_response)
-            mock_request.assert_called_once_with(
-                "POST", url="https://api.example.com/endpoint", json={"data": "example"}
-            )
-
-    async def test_handle_success_response(self):
+    @patch.object(httpx.AsyncClient, "request")
+    async def test_handle_success_response(self, mock_request):
         expected_response = {"message": "Success"}
-        mock_response = self.create_mock_resp("GET", "https://api.example.com/endpoint", json_data=expected_response)
+        endpoint_url = f"{self.base_url}/endpoint"
+
+        mock_request.return_value = self.create_mock_resp("GET", endpoint_url, json_data=expected_response)
 
         client = AsyncHttpClient(self.base_url, retries=self.retries)
+        response = await client.get("/endpoint")
+        self.assertEqual(response, expected_response)
+        mock_request.assert_called_once_with("GET", url=endpoint_url)
 
-        with patch.object(httpx.AsyncClient, "request", return_value=mock_response) as mock_request:
-            response = await client.get("/endpoint")
-            self.assertEqual(response, expected_response)
-            mock_request.assert_called_once_with("GET", url="https://api.example.com/endpoint")
-
-    async def test_handle_client_error_response(self):
-        mock_response = self.create_mock_resp("GET", "https://api.example.com/endpoint", status_code=404)
+    @patch.object(httpx.AsyncClient, "request")
+    async def test_handle_client_error_response(self, mock_request):
+        endpoint_url = f"{self.base_url}/endpoint"
+        mock_request.return_value = self.create_mock_resp("GET", endpoint_url, status_code=404)
 
         client = AsyncHttpClient(self.base_url, retries=self.retries, retry_status_codes=[404])
 
-        with patch.object(httpx.AsyncClient, "request", return_value=mock_response) as mock_request:
-            with self.assertRaises(httpx.HTTPStatusError):
-                await client.get("/endpoint")
+        with self.assertRaises(httpx.HTTPStatusError):
+            await client.get("/endpoint")
 
-            assert mock_request.call_count == self.retries + 1
+        assert mock_request.call_count == self.retries + 1
+        mock_request.assert_called_with("GET", url=endpoint_url)
 
-            mock_request.assert_called_with("GET", url="https://api.example.com/endpoint")
-
-    async def test_handle_server_error_response(self):
-        mock_response = self.create_mock_resp("GET", "https://api.example.com/endpoint", status_code=500)
+    @patch.object(httpx.AsyncClient, "request")
+    async def test_handle_server_error_response(self, mock_request):
+        endpoint_url = f"{self.base_url}/endpoint"
+        mock_request.return_value = self.create_mock_resp("GET", endpoint_url, status_code=500)
 
         client = AsyncHttpClient(self.base_url, retries=self.retries, retry_status_codes=[500])
 
-        with patch.object(httpx.AsyncClient, "request", return_value=mock_response) as mock_request:
-            with self.assertRaises(httpx.HTTPStatusError):
-                await client.get("/endpoint")
+        with self.assertRaises(httpx.HTTPStatusError):
+            await client.get("/endpoint")
 
-            assert mock_request.call_count == self.retries + 1
-
-            mock_request.assert_called_with("GET", url="https://api.example.com/endpoint")
+        assert mock_request.call_count == self.retries + 1
+        mock_request.assert_called_with("GET", url=endpoint_url)
 
     @patch.object(httpx.AsyncClient, "request")
     async def test_post_raw_default_pars_with_none_custom_pars_passes(self, mock_request):
@@ -353,17 +354,19 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
         await cl.update_auth_header(new_header, overwrite=False)
         self.assertDictEqual(cl._auth_header, {**existing_header, **new_header})
 
-    async def test_detailed_exception(self):
-        mock_response = self.create_mock_resp("GET", "https://api.example.com/endpoint", status_code=404)
+    @patch.object(httpx.AsyncClient, "request")
+    async def test_detailed_exception(self, mock_request):
+        endpoint_url = f"{self.base_url}/endpoint"
+        mock_response = self.create_mock_resp("GET", endpoint_url, status_code=404)
         mock_response._content = b"Not Found Because of x"
+        mock_request.return_value = mock_response
 
         client = AsyncHttpClient(self.base_url)
 
-        with patch.object(httpx.AsyncClient, "request", return_value=mock_response) as _:
-            with self.assertRaises(httpx.HTTPStatusError) as e:
-                await client.get("/endpoint")
+        with self.assertRaises(httpx.HTTPStatusError) as e:
+            await client.get("/endpoint")
 
-            assert "Client error '404 Not Found' for url 'https://api.example.com/endpoint'" in str(e.exception)
+        assert f"Client error '404 Not Found' for url '{endpoint_url}'" in str(e.exception)
 
 
 if __name__ == "__main__":
