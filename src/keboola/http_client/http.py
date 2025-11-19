@@ -10,7 +10,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 
 
-Cookie = "dict[str, str] | CookieJar"
+Cookie = "dict[str, str] | CookieJar"  # string literal typing for Python 3.8
 
 METHOD_RETRY_WHITELIST = ("GET", "POST", "PATCH", "UPDATE", "PUT", "DELETE")
 ALLOWED_METHODS = ["GET", "POST", "PATCH", "UPDATE", "PUT", "DELETE"]

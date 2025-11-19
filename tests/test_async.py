@@ -15,7 +15,7 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
         method: str,
         url: str,
         status_code: int = 200,
-        json_data: "dict | None" = None,
+        json_data: "dict | None" = None,  # string literal typing for Python 3.8
     ):
         """
         Helper method to create a properly configured mock response.
