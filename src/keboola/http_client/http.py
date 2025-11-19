@@ -9,6 +9,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 
+
 Cookie = "dict[str, str] | CookieJar"
 
 METHOD_RETRY_WHITELIST = ("GET", "POST", "PATCH", "UPDATE", "PUT", "DELETE")
@@ -164,18 +165,10 @@ class HttpClient:
 
         s.headers.update(headers)
 
-        # Update parameters
-        params = kwargs.pop("params", {})
-        if params is None:
-            params = {}
-
-        # Default parameters
-        if self._default_params is not None:
-            all_pars = {**params, **self._default_params}
-            kwargs.update({"params": all_pars})
-
-        else:
-            kwargs.update({"params": params})
+        # Merge default and custom parameters when applicable
+        if self._default_params and type(self._default_params) is dict:
+            params = kwargs.pop("params", {}) or {}
+            kwargs["params"] = {**self._default_params, **params}
 
         r = self._requests_retry_session(session=s).request(method, url, **kwargs)
         return r
