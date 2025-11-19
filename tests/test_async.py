@@ -10,10 +10,26 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
     base_url = "https://api.example.com"
     retries = 3
 
+    @staticmethod
+    def create_mock_resp(
+        method: str = "GET",
+        url: str = "https://api.example.com",
+        status_code: int = 200,
+        json_data: dict | None = None,
+    ):
+        """
+        Helper method to create a properly configured mock response.
+
+        Note: httpx.Response.raise_for_status() requires _request to be set, otherwise it raises RuntimeError:
+        Cannot call `raise_for_status` as the request instance has not been set on this response.
+        """
+        mock_response = httpx.Response(status_code, json=json_data or {})
+        mock_response._request = httpx.Request(method, url)
+        return mock_response
+
     async def test_get(self):
         expected_response = {"message": "Success"}
-        mock_response = httpx.Response(200, json=expected_response)
-        mock_response._request = httpx.Request("GET", "https://api.example.com/endpoint")
+        mock_response = self.create_mock_resp("GET", "https://api.example.com/endpoint", json_data=expected_response)
 
         client = AsyncHttpClient(self.base_url, retries=self.retries)
 
@@ -24,8 +40,7 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
 
     async def test_post(self):
         expected_response = {"message": "Success"}
-        mock_response = httpx.Response(200, json=expected_response)
-        mock_response._request = httpx.Request("POST", "https://api.example.com/endpoint")
+        mock_response = self.create_mock_resp("POST", "https://api.example.com/endpoint", json_data=expected_response)
 
         client = AsyncHttpClient(self.base_url, retries=self.retries)
 
@@ -38,8 +53,7 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
 
     async def test_handle_success_response(self):
         expected_response = {"message": "Success"}
-        mock_response = httpx.Response(200, json=expected_response)
-        mock_response._request = httpx.Request("GET", "https://api.example.com/endpoint")
+        mock_response = self.create_mock_resp("GET", "https://api.example.com/endpoint", json_data=expected_response)
 
         client = AsyncHttpClient(self.base_url, retries=self.retries)
 
@@ -49,8 +63,7 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
             mock_request.assert_called_once_with("GET", url="https://api.example.com/endpoint")
 
     async def test_handle_client_error_response(self):
-        mock_response = httpx.Response(404)
-        mock_response._request = httpx.Request("GET", "https://api.example.com/endpoint")
+        mock_response = self.create_mock_resp("GET", "https://api.example.com/endpoint", status_code=404)
 
         client = AsyncHttpClient(self.base_url, retries=self.retries, retry_status_codes=[404])
 
@@ -63,8 +76,7 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
             mock_request.assert_called_with("GET", url="https://api.example.com/endpoint")
 
     async def test_handle_server_error_response(self):
-        mock_response = httpx.Response(500)
-        mock_response._request = httpx.Request("GET", "https://api.example.com/endpoint")
+        mock_response = self.create_mock_resp("GET", "https://api.example.com/endpoint", status_code=500)
 
         client = AsyncHttpClient(self.base_url, retries=self.retries, retry_status_codes=[500])
 
@@ -78,6 +90,8 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
 
     @patch.object(httpx.AsyncClient, "request")
     async def test_post_raw_default_pars_with_none_custom_pars_passes(self, mock_request):
+        mock_request.return_value = self.create_mock_resp("POST", f"{self.base_url}/endpoint")
+
         url = f"{self.base_url}/endpoint"
         test_def_par = {"default_par": "test"}
 
@@ -89,6 +103,8 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
 
     @patch.object(httpx.AsyncClient, "request")
     async def test_post_default_pars_with_none_custom_pars_passes(self, mock_request):
+        mock_request.return_value = self.create_mock_resp("POST", f"{self.base_url}/endpoint")
+
         url = f"{self.base_url}/endpoint"
         test_def_par = {"default_par": "test"}
 
@@ -100,6 +116,8 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
 
     @patch.object(httpx.AsyncClient, "request")
     async def test_post_raw_default_pars_with_custom_pars_passes(self, mock_request):
+        mock_request.return_value = self.create_mock_resp("POST", f"{self.base_url}/endpoint")
+
         url = f"{self.base_url}/endpoint"
         test_def_par = {"default_par": "test"}
         cust_par = {"custom_par": "custom_par_value"}
@@ -113,6 +131,8 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
 
     @patch.object(httpx.AsyncClient, "request")
     async def test_post_default_pars_with_custom_pars_passes(self, mock_request):
+        mock_request.return_value = self.create_mock_resp("POST", f"{self.base_url}/endpoint")
+
         url = f"{self.base_url}/endpoint"
         test_def_par = {"default_par": "test"}
         cust_par = {"custom_par": "custom_par_value"}
@@ -126,6 +146,8 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
 
     @patch.object(httpx.AsyncClient, "request")
     async def test_post_raw_default_pars_with_custom_pars_to_None_passes(self, mock_request):
+        mock_request.return_value = self.create_mock_resp("POST", f"{self.base_url}/endpoint")
+
         url = f"{self.base_url}/endpoint"
         test_def_par = {"default_par": "test"}
         cust_par = None
@@ -141,6 +163,8 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
 
     @patch.object(httpx.AsyncClient, "request")
     async def test_post_default_pars_with_custom_pars_to_None_passes(self, mock_request):
+        mock_request.return_value = self.create_mock_resp("POST", f"{self.base_url}/endpoint")
+
         url = f"{self.base_url}/endpoint"
         test_def_par = {"default_par": "test"}
         cust_par = None
@@ -156,6 +180,8 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
 
     @patch.object(httpx.AsyncClient, "request")
     async def test_all_methods_requests_raw_with_custom_pars_passes(self, mock_request):
+        mock_request.return_value = self.create_mock_resp("GET", self.base_url)
+
         client = AsyncHttpClient(self.base_url)
 
         cust_par = {"custom_par": "custom_par_value"}
@@ -166,6 +192,8 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
 
     @patch.object(httpx.AsyncClient, "request")
     async def test_all_methods_skip_auth(self, mock_request):
+        mock_request.return_value = self.create_mock_resp("GET", self.base_url)
+
         client = AsyncHttpClient(self.base_url, auth=("my_user", "password123"))
 
         for m in ["GET", "POST", "PATCH", "UPDATE", "PUT", "DELETE"]:
@@ -174,6 +202,8 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
 
     @patch.object(httpx.AsyncClient, "request")
     async def test_request_skip_auth_header(self, mock_request):
+        mock_request.return_value = self.create_mock_resp("POST", "http://example.com/abc")
+
         def_header = {"def_header": "test"}
         client = AsyncHttpClient(
             "http://example.com", default_headers=def_header, auth_header={"Authorization": "test"}
@@ -184,6 +214,8 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
 
     @patch.object(httpx.AsyncClient, "request")
     async def test_request_auth(self, mock_request):
+        mock_request.return_value = self.create_mock_resp("POST", f"{self.base_url}/abc")
+
         def_header = {"def_header": "test"}
         auth = ("my_user", "password123")
         client = AsyncHttpClient(self.base_url, auth=auth, default_headers=def_header)
@@ -193,6 +225,8 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
 
     @patch.object(httpx.AsyncClient, "request")
     async def test_all_methods(self, mock_request):
+        mock_request.return_value = self.create_mock_resp("GET", f"{self.base_url}/abc")
+
         client = AsyncHttpClient(
             self.base_url, default_headers={"header1": "headerval"}, auth_header={"api_token": "abdc1234"}
         )
@@ -213,6 +247,8 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
 
     @patch.object(httpx.AsyncClient, "request")
     async def test_all_methods_requests_raw_with_is_absolute_path_true(self, mock_request):
+        mock_request.return_value = self.create_mock_resp("GET", "http://example2.com/v1/")
+
         def_header = {"def_header": "test"}
         client = AsyncHttpClient(self.base_url, default_headers=def_header)
 
@@ -222,6 +258,8 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
 
     @patch.object(httpx.AsyncClient, "request")
     async def test_all_methods_requests_raw_with_is_absolute_path_false(self, mock_request):
+        mock_request.return_value = self.create_mock_resp("GET", f"{self.base_url}/cars")
+
         def_header = {"def_header": "test"}
         client = AsyncHttpClient(self.base_url, default_headers=def_header)
 
@@ -231,6 +269,8 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
 
     @patch.object(httpx.AsyncClient, "request")
     async def test_all_methods_kwargs(self, mock_request):
+        mock_request.return_value = self.create_mock_resp("GET", f"{self.base_url}/cars")
+
         client = AsyncHttpClient(self.base_url)
 
         for m in client.ALLOWED_METHODS:
@@ -314,8 +354,8 @@ class TestAsyncHttpClient(unittest.IsolatedAsyncioTestCase):
         self.assertDictEqual(cl._auth_header, {**existing_header, **new_header})
 
     async def test_detailed_exception(self):
-        mock_response = httpx.Response(404, text="Not Found Because of x")
-        mock_response._request = httpx.Request("GET", "https://api.example.com/endpoint")
+        mock_response = self.create_mock_resp("GET", "https://api.example.com/endpoint", status_code=404)
+        mock_response._content = b"Not Found Because of x"
 
         client = AsyncHttpClient(self.base_url)
 
