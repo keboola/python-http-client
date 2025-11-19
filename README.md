@@ -229,7 +229,7 @@ print(cl.get_files())
 ### AsyncHttpClient
 
 The package also provides an asynchronous version of the HTTP client called AsyncHttpClient.
-It allows you to make asynchronous requests using async/await syntax. To use the AsyncHttpClient, import it from keboola.http_client_async:
+It allows you to make asynchronous requests using async/await syntax. To use the AsyncHttpClient, import it from keboola.http_client:
 
 ```py
 from keboola.http_client import AsyncHttpClient
@@ -248,12 +248,15 @@ async def main():
     async with AsyncHttpClient(base_url) as client:
         response = await client.get("endpoint")
 
-        if response.status_code == 200:
-            data = response.json()
-            # Process the response data
-        else:
-            # Handle the error
-            pass
+        # response is already a parsed dict (JSON data)
+        data = response
+        # Process the response data
+
+        # If you need status code or raw response, use client.get_raw(...)
+        # For example:
+        # raw_response = await client.get_raw("endpoint")
+        # if raw_response.status_code == 200:
+        #     data = raw_response.json()
 
 
 asyncio.run(main())
