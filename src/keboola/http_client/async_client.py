@@ -170,7 +170,7 @@ class AsyncHttpClient:
                     else:
                         raise type(e)(error_msg) from e
 
-                backoff = self.backoff_factor**retry_attempt
+                backoff = 0 if retry_attempt == 0 else self.backoff_factor * (2 ** (retry_attempt - 1))
                 logging.error(
                     f"Retry attempt {retry_attempt + 1} for {method} request to {url}: "
                     f"Exception={type(e).__name__}, Message='{message}', "
