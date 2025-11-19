@@ -1,3 +1,21 @@
+- [Python HTTP Client](#python-http-client)
+  - [Introduction](#introduction)
+  - [Links](#links)
+  - [Quick Start](#quick-start)
+    - [Installation](#installation)
+    - [Structure and Functionality](#structure-and-functionality)
+    - [HttpClient](#httpclient)
+      - [Initialization](#initialization)
+      - [Default Arguments](#default-arguments)
+      - [Basic Authentication](#basic-authentication)
+      - [Simple POST Request](#simple-post-request)
+      - [Working with URL Paths](#working-with-url-paths)
+      - [Raw Request Example](#raw-request-example)
+      - [Example Client Based on HTTPClient](#example-client-based-on-httpclient)
+    - [AsyncHttpClient](#asynchttpclient)
+      - [Example Client Based on AsyncHttpClient](#example-client-based-on-asynchttpclient)
+  - [License](#license)
+
 # Python HTTP Client
 
 ## Introduction
@@ -32,7 +50,7 @@ pip install keboola.http-client
 The package contains a single core module:
 - `keboola.http_client` - Contains the `HttpClient` class for easy manipulation with APIs and external services
 
-### `HttpClient`
+### HttpClient
 
 The core class that serves as a tool to communicate with external services. The class is a wrapper around the `requests` library with implemented retry mechanism, and automatic error handling in case of HTTP error returned.
 
@@ -52,61 +70,59 @@ All abovementioned methods support all parameters supported by `requests.request
 
 The core class is `keboola.http_client.HttpClient`, which can be initialized by specifying the `base_url` parameter:
 
-```python
+```py
 from keboola.http_client import HttpClient
 
-BASE_URL = 'https://connection.keboola.com/v2/storage/'
+BASE_URL = "https://connection.keboola.com/v2/storage/"
 cl = HttpClient(BASE_URL)
 ```
 
-#### Default arguments
+#### Default Arguments
 
 For `HttpClient`, it is possible to define default arguments, which will be sent with every request. It's possible to define `default_http_header`, `auth_header` and `default_params` - a default header, a default authentication header and default parameters, respectively.
 
-```python
+```py
 from keboola.http_client import HttpClient
 
-BASE_URL = 'https://connection.keboola.com/v2/storage/'
-AUTH_HEADER = {
-    'x-storageapi-token': '1234-STORAGETOKENSTRING'
-}
-DEFAULT_PARAMS = {
-    'include': 'columns'
-}
-DEFAULT_HEADER = {
-    'Content-Type': 'application/json'
-}
+BASE_URL = "https://connection.keboola.com/v2/storage/"
+AUTH_HEADER = {"x-storageapi-token": "1234-STORAGETOKENSTRING"}
+DEFAULT_PARAMS = {"include": "columns"}
+DEFAULT_HEADER = {"Content-Type": "application/json"}
 
-cl = HttpClient(BASE_URL, default_http_header=DEFAULT_HEADER,
-                auth_header=AUTH_HEADER, default_params=DEFAULT_PARAMS)
+cl = HttpClient(
+    BASE_URL,
+    default_http_header=DEFAULT_HEADER,
+    auth_header=AUTH_HEADER,
+    default_params=DEFAULT_PARAMS,
+)
 ```
 
-#### Basic authentication
+#### Basic Authentication
 
 By specifying the `auth` argument, the `HttpClient` will utilize the basic authentication.
 
-```python
+```py
 from keboola.http_client import HttpClient
 
-BASE_URL = 'https://connection.keboola.com/v2/storage/'
-USERNAME = 'TestUser'
-PASSWORD = '@bcd1234'
+BASE_URL = "https://connection.keboola.com/v2/storage/"
+USERNAME = "TestUser"
+PASSWORD = "@bcd1234"
 
 cl = HttpClient(BASE_URL, auth=(USERNAME, PASSWORD))
 ```
 
-#### Simple POST request
+#### Simple POST Request
 
 Making a simple POST request using `post_raw()` method.
 
-```python
+```py
 from keboola.http_client import HttpClient
 
-BASE_URL = 'https://www.example.com/change'
+BASE_URL = "https://www.example.com/change"
 cl = HttpClient(BASE_URL)
 
-data = {'attr_1': 'value_1', 'attr_2': 'value_2'}
-header = {'content-type': 'application/json'}
+data = {"attr_1": "value_1", "attr_2": "value_2"}
+header = {"content-type": "application/json"}
 response = cl.post_raw(data=data, headers=header)
 
 if response.ok is not True:
@@ -117,93 +133,180 @@ else:
 
 Making a simple POST request using `post()` method.
 
-```python
+```py
 from keboola.http_client import HttpClient
 
-BASE_URL = 'https://www.example.com/change'
+BASE_URL = "https://www.example.com/change"
 cl = HttpClient(BASE_URL)
 
-data = {'attr_1': 'value_1', 'attr_2': 'value_2'}
-header = {'content-type': 'application/json'}
+data = {"attr_1": "value_1", "attr_2": "value_2"}
+header = {"content-type": "application/json"}
 response = cl.post(data=data, headers=header)
 ```
 
-#### Working with URL paths
+#### Working with URL Paths
 
 Each of the methods takes an optional positional argument `endpoint_path`. If specified, the value of the `endpoint_path` will be appended to the URL specified in the `base_url` parameter, when initializing the class. When appending the `endpoint_path`, the [`urllib.parse.urljoin()`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin) function is used.
 
 The below code will send a POST request to the URL `https://example.com/api/v1/events`:
 
-```python
+```py
 from keboola.http_client import HttpClient
 
-BASE_URL = 'https://example.com/api/v1'
+BASE_URL = "https://example.com/api/v1"
 cl = HttpClient(BASE_URL)
 
-header = {'token': 'token_value'}
-cl.post_raw('events', headers=header)
+header = {"token": "token_value"}
+cl.post_raw("events", headers=header)
 ```
 
 It is also possible to override this behavior by using parameter `is_absolute_path=True`. If specified, the value of `endpoint_path` will not be appended to the `base_url` parameter, but will rather be used as an absolute URL to which the HTTP request will be made.
 
 In the below code, the `base_url` parameter is set to `https://example.com/api/v1`, but the base URL will be overriden by specifying `is_absolute_path=True` and the HTTP request will be made to the URL specified in the `post()` request - `https://anothersite.com/v2`.
 
-```python
+```py
 from keboola.http_client import HttpClient
 
-BASE_URL = 'https://example.com/api/v1'
+BASE_URL = "https://example.com/api/v1"
 cl = HttpClient(BASE_URL)
 
-header = {'token': 'token_value'}
-cl.post_raw('https://anothersite.com/v2', headers=header, is_absolute_path=True)
+header = {"token": "token_value"}
+cl.post_raw("https://anothersite.com/v2", headers=header, is_absolute_path=True)
 ```
 
-#### Raw request Example
+#### Raw Request Example
 
 A simple request made with default authentication header and parameters.
 
-```python
+```py
 import os
 from keboola.http_client import HttpClient
 
-BASE_URL = 'https://connection.keboola.com/v2/'
-TOKEN = os.environ['TOKEN']
+BASE_URL = "https://connection.keboola.com/v2/"
+TOKEN = os.environ["TOKEN"]
 
-cl = HttpClient(BASE_URL, auth_header={'x-storageapi-token': TOKEN})
+cl = HttpClient(BASE_URL, auth_header={"x-storageapi-token": TOKEN})
 
-request_params = {'exclude': 'components'}
-response = cl.get_raw('storage', params=request_params)
+request_params = {"exclude": "components"}
+response = cl.get_raw("storage", params=request_params)
 
 if response.ok is True:
     print(response.json())
 ```
 
-#### Building HTTP client based on HTTPClient Example
+#### Example Client Based on HTTPClient
 
 This example demonstrates the default use of the HTTPClient as a base for REST API clients.
 
-```python
+```py
 from keboola.http_client import HttpClient
 
-BASE_URL = 'https://connection.eu-central-1.keboola.com/v2/storage'
+BASE_URL = "https://connection.eu-central-1.keboola.com/v2/storage"
 MAX_RETRIES = 10
 
 
 class KBCStorageClient(HttpClient):
-
     def __init__(self, storage_token):
-        HttpClient.__init__(self, base_url=BASE_URL, max_retries=MAX_RETRIES, backoff_factor=0.3,
-                            status_forcelist=(429, 500, 502, 504),
-                            auth_header={"X-StorageApi-Token": storage_token})
+        HttpClient.__init__(
+            self,
+            base_url=BASE_URL,
+            max_retries=MAX_RETRIES,
+            backoff_factor=0.3,
+            status_forcelist=(429, 500, 502, 504),
+            auth_header={"X-StorageApi-Token": storage_token},
+        )
 
     def get_files(self, show_expired=False):
         params = {"showExpired": show_expired}
-        return self.get('files', params=params)
+        return self.get("files", params=params)
+
 
 cl = KBCStorageClient("my_token")
 
 print(cl.get_files())
 ```
+
+### AsyncHttpClient
+
+The package also provides an asynchronous version of the HTTP client called AsyncHttpClient.
+It allows you to make asynchronous requests using async/await syntax. To use the AsyncHttpClient, import it from keboola.http_client:
+
+```py
+from keboola.http_client import AsyncHttpClient
+```
+
+The AsyncHttpClient class provides functionality similar to the HttpClient class, but with asynchronous methods such as get, post, put, patch, and delete that return awaitable coroutines. You can use these methods within async functions to perform non-blocking HTTP requests.
+
+```py
+import asyncio
+
+from keboola.http_client import AsyncHttpClient
+
+
+async def main():
+    base_url = "https://api.example.com/"
+    async with AsyncHttpClient(base_url) as client:
+        response = await client.get("endpoint")
+
+        # response is already a parsed dict (JSON data)
+        data = response
+        # Process the response data
+
+        # If you need status code or raw response, use client.get_raw(...)
+        # For example:
+        # raw_response = await client.get_raw("endpoint")
+        # if raw_response.status_code == 200:
+        #     data = raw_response.json()
+
+
+asyncio.run(main())
+```
+
+The AsyncHttpClient provides initialization and request methods similar to the HttpClient.
+The request methods return awaitable coroutines that can be awaited in an asynchronous context.
+
+#### Example Client Based on AsyncHttpClient
+
+This example demonstrates the default use of the AsyncHttpClient as a base for REST API clients.
+
+```py
+import asyncio
+
+from keboola.http_client import AsyncHttpClient
+
+BASE_URL = "https://connection.keboola.com/v2/storage"
+MAX_RETRIES = 3
+
+
+class KBCStorageClient(AsyncHttpClient):
+    def __init__(self, storage_token):
+        AsyncHttpClient.__init__(
+            self,
+            base_url=BASE_URL,
+            retries=MAX_RETRIES,
+            backoff_factor=0.3,
+            retry_status_codes=[429, 500, 502, 504],
+            auth_header={"X-StorageApi-Token": storage_token},
+        )
+
+    async def get_files(self, show_expired=False):
+        params = {"showExpired": show_expired}
+        response = await self.get("tables", params=params, timeout=5)
+        return response
+
+
+async def main():
+    cl = KBCStorageClient("my_token")
+    files = await cl.get_files(show_expired=False)
+    print(files)
+
+
+asyncio.run(main())
+```
+
+**Note:** Since there are no parallel requests being made, you won't notice any speedup for this use case.
+For an example of a noticeable speedup thanks to async requests, see the pokeapi.py in `docs/examples`.
+
 ## License
 
 MIT licensed, see [LICENSE](./LICENSE) file.

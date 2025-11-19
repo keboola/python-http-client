@@ -175,7 +175,7 @@ class TestClientBase(unittest.TestCase):
 
         for met in client.ALLOWED_METHODS:
             cl._request_raw(met, 'http://example2.com/v1/', ignore_auth=False, is_absolute_path=True)
-            mock_request.assert_called_with(met, 'http://example2.com/v1/', params={})
+            mock_request.assert_called_with(met, 'http://example2.com/v1/')
 
         cl._requests_retry_session().close()
 
@@ -186,7 +186,7 @@ class TestClientBase(unittest.TestCase):
 
         for met in ['GET', 'POST', 'PATCH', 'UPDATE', 'PUT']:
             cl._request_raw(met, 'events', ignore_auth=False, is_absolute_path=False)
-            mock_request.assert_called_with(met, 'http://example.com/api/v1/events', params={})
+            mock_request.assert_called_with(met, 'http://example.com/api/v1/events')
 
         cl._requests_retry_session().close()
 
